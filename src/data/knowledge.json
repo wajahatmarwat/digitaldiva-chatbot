@@ -1,0 +1,32 @@
+[
+  {
+    "service": "SEO",
+    "summary": "Improve search ranking, organic traffic, and lead quality using technical SEO, on-page optimization, and content strategy.",
+    "whenToRecommend": ["website traffic", "google ranking", "organic leads", "search visibility", "seo", "search engine", "google seo"],
+    "startingRange": "$300-$1500/month"
+  },
+  {
+    "service": "Social Media Marketing",
+    "summary": "Grow audience engagement and brand awareness via strategic posting, paid campaigns, and conversion-focused creatives.",
+    "whenToRecommend": ["instagram growth", "social engagement", "ads", "brand awareness", "social media", "facebook", "instagram", "linkedin", "social"],
+    "startingRange": "$250-$2000/month"
+  },
+  {
+    "service": "Web Development",
+    "summary": "Build modern, high-performance websites and landing pages optimized for conversions, speed, and mobile responsiveness.",
+    "whenToRecommend": ["new website", "redesign", "faster website", "landing page", "web development", "website", "web dev", "website design", "website build", "webdevelopment", "development", "build website"],
+    "startingRange": "$600-$5000/project"
+  },
+  {
+    "service": "AI Automation",
+    "summary": "Automate repetitive workflows using AI chatbots, lead routing, follow-up sequences, and business process automation.",
+    "whenToRecommend": ["automation", "save time", "chatbot", "workflow", "ai automation", "automate", "chatbots", "whatsapp"],
+    "startingRange": "$500-$4000/project"
+  },
+  {
+    "service": "E-Commerce Solutions",
+    "summary": "Launch or optimize online stores with better UX, product discovery, checkout flow, and revenue growth strategies.",
+    "whenToRecommend": ["online store", "shopify", "ecommerce sales", "checkout", "ecommerce", "online shop", "store", "woocommerce"],
+    "startingRange": "$700-$6000/project"
+  }
+]

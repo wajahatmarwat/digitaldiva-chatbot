@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digital Diva AI Chatbot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bg-shape bg-shape-1"></div>
+    <div class="bg-shape bg-shape-2"></div>
+
+    <main class="container">
+      <section class="intro">
+        <p class="eyebrow">AI Sales Assistant</p>
+        <h1>Digital Diva Website Chatbot</h1>
+        <p>
+          A deployable AI assistant that answers service questions, recommends the right solution,
+          qualifies leads, and helps your team close more business.
+        </p>
+      </section>
+
+      <section class="card">
+        <div id="chat" class="chat"></div>
+
+        <form id="chat-form" class="chat-form">
+          <input id="message" type="text" placeholder="Ask about SEO, Web Development, AI Automation..." required />
+          <button type="submit">Send</button>
+        </form>
+
+        <div id="quick-actions" class="quick-actions">
+          <button data-action="EXPLORE_SERVICES">Explore Services</button>
+          <button data-action="GET_QUOTE">Get a Quote</button>
+          <button data-action="EXPLORE_ALL">See Our Work</button>
+        </div>
+      </section>
+
+      <section class="lead-card">
+        <h2>Get a Proposal</h2>
+        <form id="lead-form" class="lead-form">
+          <input name="name" placeholder="Name" required />
+          <input name="email" type="email" placeholder="Email" required />
+          <input name="company" placeholder="Company" />
+          <input name="budget" placeholder="Budget range" />
+          <textarea name="goals" placeholder="Your goals" required></textarea>
+          <button type="submit">Submit Lead</button>
+        </form>
+        <p id="lead-status" class="lead-status"></p>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
