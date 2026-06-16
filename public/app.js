@@ -1,422 +1,178 @@
-let sessionId = "";
+/* ================================================================
+   Digital Diva AI Chatbot — Frontend Application Logic
+   ================================================================ */
 
-const chatEl = document.getElementById("chat");
-const formEl = document.getElementById("chat-form");
-const messageEl = document.getElementById("message");
-const quickActionsEl = document.getElementById("quick-actions");
-const leadFormEl = document.getElementById("lead-form");
-const leadStatusEl = document.getElementById("lead-status");
-const followupsEl = document.createElement('div');
-followupsEl.id = 'followups';
-followupsEl.className = 'followups';
-followupsEl.style.marginTop = '10px';
-document.querySelector('.card').appendChild(followupsEl);
+// ── DOM refs ──────────────────────────────────────────────────────
+const chatEl       = document.getElementById('chat');
+const formEl       = document.getElementById('chat-form');
+const messageEl    = document.getElementById('message');
+const leadFormEl   = document.getElementById('lead-form');
+const leadStatusEl = document.getElementById('lead-status');
+const newChatBtn   = document.getElementById('new-chat-btn');
+const followupsEl  = document.getElementById('followups');
+const reviewModal  = document.getElementById('lead-review-modal');
+const modalBody    = document.getElementById('modal-body');
+const reviewConfirm= document.getElementById('review-confirm');
+const reviewEdit   = document.getElementById('review-edit');
+const modalClose   = document.getElementById('modal-close');
 
-// --- Diva scripted flow helpers ---
-const quoteState = { inProgress: false, step: 0, answers: {}, region: 'pakistan', packageSet: null };
+// ── State ─────────────────────────────────────────────────────────
+let sessionId = '';
+const whatsappNumber = '923058977853';
+
+const quoteState = {
+  inProgress: false, step: 0, answers: {}, region: 'pakistan', packageSet: null,
+  awaitingContact: false, awaitingEmail: false, awaitingCompany: false,
+  awaitingBudget: false, awaitingGoals: false
+};
 let leadDraftName = '';
 
+// ── Helpers ───────────────────────────────────────────────────────
+function buildWhatsAppUrl(message) {
+  return `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(message)}`;
+}
+
 function detectRegionFromText(text) {
-  const internationalRe = /\b(usd|dollar|dollars|international|overseas|usa|america|united states|canada|uk|england|europe|singapore|uae|dubai|australia|new zealand|euro|pound|sterling)\b/i;
-  const pakRe = /\b(pakistan|pak|pk|lahore|karachi|islamabad|faisalabad|rawalpindi)\b/i;
-  const romanUrduMarkers = /\b(kitna|kahan|hai|hoga|kya|mujhe|shayad|bhai|ji|acha|theek)\b/i;
+  const intlRe = /\b(usd|dollar|dollars|international|overseas|usa|america|united states|canada|uk|england|europe|singapore|uae|dubai|australia|new zealand|euro|pound|sterling)\b/i;
+  const pakRe  = /\b(pakistan|pak|pk|lahore|karachi|islamabad|faisalabad|rawalpindi)\b/i;
+  const romUrdu= /\b(kitna|kahan|hai|hoga|kya|mujhe|shayad|bhai|ji|acha|theek)\b/i;
   if (pakRe.test(text)) return 'pakistan';
-  if (internationalRe.test(text)) return 'international';
-  if (!romanUrduMarkers.test(text) && /[A-Za-z]/.test(text) && text.length > 20) return 'international';
+  if (intlRe.test(text)) return 'international';
+  if (!romUrdu.test(text) && /[A-Za-z]/.test(text) && text.length > 20) return 'international';
   return quoteState.region || 'pakistan';
 }
 
 function getPackageSet() {
   if (quoteState.answers.scope === 'full') return 'B';
-  if (quoteState.answers.scope === 'startup') {
-    return quoteState.region === 'international' ? 'B' : 'C';
-  }
-  if (quoteState.answers.scope === 'not_sure') {
-    return quoteState.region === 'international' ? 'B' : 'A';
-  }
-  if (quoteState.answers.scope === 'one') {
-    return quoteState.region === 'international' ? 'B' : 'A';
-  }
+  if (quoteState.answers.scope === 'startup') return quoteState.region === 'international' ? 'B' : 'C';
+  if (['not_sure', 'one'].includes(quoteState.answers.scope)) return quoteState.region === 'international' ? 'B' : 'A';
   return quoteState.region === 'international' ? 'B' : 'A';
 }
 
 function getPackageSetName() {
-  const set = quoteState.packageSet || getPackageSet();
-  if (set === 'A') return 'Marketing Plan';
-  if (set === 'B') return 'Full Marketing Plan';
-  return 'Startup Bundle';
+  const s = quoteState.packageSet || getPackageSet();
+  return s === 'A' ? 'Marketing Plan' : s === 'B' ? 'Full Marketing Plan' : 'Startup Bundle';
 }
 
 function getDefaultTier() {
-  if (quoteState.packageSet === 'C') return 'Startup Bundle';
-  if (quoteState.packageSet === 'B') {
+  const s = quoteState.packageSet;
+  if (s === 'C') return 'Startup Bundle';
+  if (s === 'B') {
     if (quoteState.answers.scope === 'full') return 'Premium Package';
-    if (quoteState.answers.stage === 'Established' || quoteState.answers.stage === 'E-commerce') return 'Growth Package';
+    if (['Established','E-commerce'].includes(quoteState.answers.stage)) return 'Growth Package';
     return 'Starter Package';
   }
-  if (quoteState.packageSet === 'A') {
-    if (quoteState.answers.stage === 'Established' || quoteState.answers.stage === 'E-commerce') return 'Professional Package';
-    if (quoteState.answers.stage === 'Startup') return 'Standard Package';
+  if (s === 'A') {
+    if (['Established','E-commerce'].includes(quoteState.answers.stage)) return 'Professional Package';
     return 'Standard Package';
   }
   return 'Starter Package';
 }
 
-function getTierSummary(tier) {
-  const set = quoteState.packageSet;
-  const map = {
-    A: {
-      'Standard Package': 'This is the entry-level plan in PKR — it covers core social channels, website management, marketing strategy, and steady content with weekly reporting.',
-      'Professional Package': 'This middle PKR tier adds more content, more ad creatives, and more reporting so your brand can move faster with a stronger campaign rhythm.',
-      'Premium Package': 'This full PKR tier is built for larger campaigns, more platforms, unlimited ad creatives, daily reports, and a more custom strategy across your digital presence.'
-    },
-    B: {
-      'Starter Package': 'This USD tier covers two platforms, 10 posts a month, basic engagement and analytics, and a simple content calendar for steady growth.',
-      'Growth Package': 'This USD tier covers three platforms, more content, paid ad setup, email marketing setup, and stronger analytics so your brand can scale faster.',
-      'Premium Package': 'This USD tier covers five platforms, advanced video content, ad campaign management, full SEO, email marketing, landing-page optimisation, and monthly strategy calls.'
-    }
-  };
-  if (set === 'C') {
-    return 'The Startup Bundle is a fixed PKR package for new businesses: website build plus content, social, ads management and strategy together from day one.';
-  }
-  return map[set]?.[tier] || 'This package tier gives a balanced mix of digital marketing support and strategy for your business.';
+function getPackageSetDescription() {
+  const s = quoteState.packageSet;
+  if (s === 'A') return 'For Pakistan-based clients, this Marketing Plan typically starts from PKR 80,000 per month and is customised to your scope.';
+  if (s === 'B') return 'For international or full-support marketing, this Full Marketing Plan usually begins around USD 1,000 per month.';
+  if (s === 'C') return 'The Startup Bundle typically starts near PKR 120,000 for launch and early growth support.';
+  return 'The exact quote will be confirmed after we review your goals.';
 }
 
-function showBusinessStage(extraText = '') {
-  let prompt = `${extraText}And which best describes your business right now?`;
-  if (quoteState.answers.scope === 'one') {
-    prompt += ' If it’s useful, I can also point you toward what usually pairs well with this — just let me know.';
-  }
-  showBotWithButtons(prompt, [
-    { label: 'Startup / New business', action: 'BUSINESS_STAGE', value: 'Startup' },
-    { label: 'Established / Growth', action: 'BUSINESS_STAGE', value: 'Established' },
-    { label: 'E-commerce / Selling online', action: 'BUSINESS_STAGE', value: 'E-commerce' },
-    { label: 'Other', action: 'BUSINESS_STAGE', value: 'Other' }
-  ]);
+// ── UI Rendering ──────────────────────────────────────────────────
+
+/** Add a message bubble to the chat */
+function appendMessage(text, role) {
+  // Remove any existing typing indicator
+  const existingTyping = chatEl.querySelector('.msg.typing');
+  if (existingTyping) existingTyping.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.textContent = text;
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
 }
 
-function renderPersistentButtons() {
-  // ensure persistent Main Menu and Talk to the Team are visible
-  const existing = followupsEl.querySelector('.persistent-actions');
+/** Show animated typing indicator */
+function showTyping() {
+  const existing = chatEl.querySelector('.msg.typing');
   if (existing) return;
-  const wrap = document.createElement('div');
-  wrap.className = 'persistent-actions';
-  wrap.style.marginTop = '8px';
-  const main = document.createElement('button');
-  main.textContent = 'Main Menu';
-  main.className = 'quick-reply persistent';
-  main.style.marginRight = '8px';
-  main.addEventListener('click', () => handleAction('MAIN_MENU'));
-  wrap.appendChild(main);
-  followupsEl.appendChild(wrap);
+  const div = document.createElement('div');
+  div.className = 'msg typing';
+  div.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
 }
 
+/** Remove typing indicator */
+function hideTyping() {
+  const t = chatEl.querySelector('.msg.typing');
+  if (t) t.remove();
+}
+
+/** Clear quick-reply pills */
+function clearFollowups() {
+  followupsEl.innerHTML = '';
+}
+
+/** Render bot message + quick-reply buttons */
 function showBotWithButtons(text, buttons = []) {
   appendMessage(text, 'bot');
   clearFollowups();
-  buttons.forEach(b => {
-    const btn = document.createElement('button');
-    btn.className = 'quick-reply';
-    btn.style.marginRight = '8px';
-    btn.style.marginBottom = '8px';
-    btn.textContent = b.label;
-    btn.addEventListener('click', () => handleAction(b.action, b.value));
-    followupsEl.appendChild(btn);
-  });
-  renderPersistentButtons();
-}
 
-function handleAction(action, value) {
-  switch ((action || '').toString()) {
-    case 'MAIN_MENU':
-      showMainMenu();
-      break;
-    case 'TALK_TO_TEAM':
-      showBotWithButtons('Of course — here are the best ways to reach us directly:', [
-        { label: 'WhatsApp Us', action: 'WHATSAPP' },
-        { label: 'Email Us', action: 'EMAIL' },
-        { label: 'Book a Call', action: 'BOOK' }
-      ]);
-      break;
-
-    case 'EXPLORE_SERVICES':
-      showBotWithButtons('Sure — here’s what we work on. Tap a category and I’ll give you a quick rundown:', [
-        { label: 'Growth & Visibility (SEO/Ads)', action: 'EXPLORE_SEO' },
-        { label: 'Content & Creative', action: 'EXPLORE_CONTENT' },
-        { label: 'Web & Shopify', action: 'EXPLORE_WEB' },
-        { label: 'Email & Retention', action: 'EXPLORE_EMAIL' },
-        { label: 'Show me everything', action: 'EXPLORE_ALL' }
-      ]);
-      break;
-    case 'EXPLORE_SEO':
-      showBotWithButtons('This is everything that gets your brand seen and brings the right people to your site:\nSEO — technical audits, on-page work, content that ranks\nPaid Ads — targeting, creative testing, budget management\nAnalytics & Reporting — live dashboards, regular check-ins on what’s working', [
-        { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_SEO' },
-        { label: 'See another category', action: 'EXPLORE_SERVICES' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-      ]);
-      break;
-    case 'EXPLORE_CONTENT':
-      showBotWithButtons('Our Content & Creative team produces everything from social posts to full campaigns: Content, Graphic Design and Video.', [
-        { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_CONTENT' },
-        { label: 'See another category', action: 'EXPLORE_SERVICES' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-      ]);
-      break;
-    case 'EXPLORE_WEB':
-      showBotWithButtons('We design, build and maintain websites and online stores — WordPress and Shopify with on-page SEO from day one.', [
-        { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_WEB' },
-        { label: 'See another category', action: 'EXPLORE_SERVICES' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-      ]);
-      break;
-    case 'EXPLORE_EMAIL':
-      showBotWithButtons('We help brands stay top-of-mind and turn one-time buyers into repeat customers: Email Marketing and lifecycle campaigns.', [
-        { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_EMAIL' },
-        { label: 'See another category', action: 'EXPLORE_SERVICES' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-      ]);
-      break;
-    case 'EXPLORE_ALL':
-      showBotWithButtons('Here’s the full picture of what we do: SEO, Paid Ads, Content Marketing, Social Media, Email, Web & Shopify, Design, Video, Branding, Analytics, Strategy & Consulting', [
-        { label: 'Get a quote', action: 'GET_QUOTE' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-      ]);
-      break;
-    case 'GET_QUOTE':
-      startQuoteFlow();
-      break;
-    case 'GET_QUOTE_FOR_SEO':
-    case 'GET_QUOTE_FOR_CONTENT':
-    case 'GET_QUOTE_FOR_WEB':
-    case 'GET_QUOTE_FOR_EMAIL':
-      startQuoteFlow(value || action.replace('GET_QUOTE_FOR_', ''));
-      break;
-    case 'QUOTE_B1_SURE':
-      // ask scope
-      quoteState.inProgress = true;
-      quoteState.step = 2;
-      quoteState.answers = { category: quoteState.answers.category || '' };
-      showBotWithButtons('First up — are you looking for help with one specific thing, or more general, ongoing marketing support across the board?', [
-        { label: 'One specific service', action: 'QUOTE_ONE' },
-        { label: 'Full marketing support (everything)', action: 'QUOTE_FULL' },
-        { label: 'I’m a new business / startup', action: 'QUOTE_STARTUP' },
-        { label: 'Not sure yet', action: 'QUOTE_NOT_SURE' }
-      ]);
-      break;
-    case 'QUOTE_B1_PRICING':
-      quoteState.inProgress = true;
-      quoteState.step = 2;
-      quoteState.answers = { category: quoteState.answers.category || '' };
-      showBotWithButtons('Okay — to point you to the right pricing set, which service are you looking for?', [
-        { label: 'SEO', action: 'QUOTE_SERVICE', value: 'SEO' },
-        { label: 'Paid Ads', action: 'QUOTE_SERVICE', value: 'Paid Ads' },
-        { label: 'Content & Social', action: 'QUOTE_SERVICE', value: 'Content & Social' },
-        { label: 'Website (WordPress)', action: 'QUOTE_SERVICE', value: 'Website' },
-        { label: 'Shopify Store', action: 'QUOTE_SERVICE', value: 'Shopify' },
-        { label: 'Email Marketing', action: 'QUOTE_SERVICE', value: 'Email' }
-      ]);
-      break;
-    case 'QUOTE_ONE':
-      quoteState.answers.scope = 'one';
-      quoteState.step = 3;
-      showBotWithButtons('Which service?', [
-        { label: 'SEO', action: 'QUOTE_SERVICE', value: 'SEO' },
-        { label: 'Paid Ads', action: 'QUOTE_SERVICE', value: 'Paid Ads' },
-        { label: 'Content & Social', action: 'QUOTE_SERVICE', value: 'Content & Social' },
-        { label: 'Website (WordPress)', action: 'QUOTE_SERVICE', value: 'Website' },
-        { label: 'Shopify Store', action: 'QUOTE_SERVICE', value: 'Shopify' },
-        { label: 'Email Marketing', action: 'QUOTE_SERVICE', value: 'Email' },
-        { label: 'Something else', action: 'QUOTE_SERVICE', value: 'Other' }
-      ]);
-      break;
-    case 'QUOTE_FULL':
-      quoteState.answers.scope = 'full';
-      quoteState.step = 4;
-      showBusinessStage('That’s usually our favourite kind of project — it means we can plan everything together instead of working around gaps. ');
-      break;
-    case 'QUOTE_STARTUP':
-      quoteState.answers.scope = 'startup';
-      quoteState.step = 4;
-      showBusinessStage();
-      break;
-    case 'QUOTE_NOT_SURE':
-      quoteState.answers.scope = 'not_sure';
-      quoteState.step = 4;
-      showBusinessStage();
-      break;
-    case 'QUOTE_SERVICE':
-      quoteState.answers.service = value;
-      if (!quoteState.answers.scope) {
-        quoteState.answers.scope = 'one';
-        quoteState.step = 3;
-        showBotWithButtons('Are you based in Pakistan, or is this an international project?', [
-          { label: 'Pakistan / PKR', action: 'QUOTE_REGION', value: 'pakistan' },
-          { label: 'International / USD', action: 'QUOTE_REGION', value: 'international' }
-        ]);
-        return;
-      }
-      quoteState.step = 4;
-      showBusinessStage();
-      break;
-    case 'QUOTE_REGION':
-      quoteState.region = value;
-      quoteState.step = 4;
-      showBusinessStage();
-      break;
-    case 'BUSINESS_STAGE':
-      quoteState.answers.stage = value;
-      quoteState.step = 5;
-      let extra = '';
-      if (quoteState.answers.service === 'SEO' && value === 'Startup') {
-        extra = 'Heads up — for brand-new sites, we usually pair SEO with a quick technical check first, so nothing’s holding the site back before we start building rankings.';
-      } else if (quoteState.answers.service === 'Shopify' && value === 'E-commerce') {
-        extra = 'If you’re already selling, it’s often worth a quick look at your store setup alongside ads — a few small fixes can make paid traffic convert a lot better.';
-      } else if (quoteState.answers.service === 'Content & Social' && value === 'Startup') {
-        extra = 'For new brands, we typically start with a short content plan before posting — so everything ties back to one direction instead of one-off posts.';
-      }
-      showBotWithButtons(`${extra ? extra + '\n\n' : ''}Last one — when are you hoping to get started?`, [
-        { label: 'Right away', action: 'TIMELINE', value: 'Right away' },
-        { label: 'Within a month', action: 'TIMELINE', value: 'Within a month' },
-        { label: 'Just exploring options', action: 'TIMELINE', value: 'Exploring' }
-      ]);
-      break;
-    case 'TIMELINE':
-      quoteState.answers.timeline = value;
-      quoteState.step = 6;
-      quoteState.packageSet = getPackageSet();
-      const setName = getPackageSetName();
-      const regionNote = quoteState.region === 'international' && quoteState.packageSet !== 'B' ? 'For international clients we run these as part of one plan rather than splitting by channel — here’s how that looks:' : '';
-      const packageText = getPackageSetDescription();
-      showBotWithButtons(`${regionNote ? regionNote + '\n\n' : ''}Here’s the package set this usually maps to: ${setName}. ${packageText}`, [
-        { label: 'Tell me more', action: 'PACKAGE_TELL_MORE' },
-        { label: "I’d like a custom quote", action: 'TALK_TO_TEAM' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-      ]);
-      break;
-    case 'PACKAGE_TELL_MORE':
-      showBotWithButtons('Our packages start simple and scale with the scope. The team will confirm the right starting point and exact numbers after a quick review of your goals.', [
-        { label: 'Continue to contact options', action: 'LEAD_OPTIONS' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' },
-        { label: 'Main Menu', action: 'MAIN_MENU' }
-      ]);
-      break;
-    case 'LEAD_OPTIONS':
-      showBotWithButtons('Great — pick the contact method that works best for you:', [
-        { label: 'Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
-        { label: 'Continue by Email', action: 'LEAD_EMAIL' },
-        { label: 'Book a call directly', action: 'LEAD_BOOK' }
-      ]);
-      // allow typed name/email after offering options
-      quoteState.awaitingContact = true;
-      quoteState.awaitingEmail = false;
-      break;
-    case 'LEAD_WHATSAPP':
-      {
-        const pre = `Hi Digital Diva! I came from your website chat — I'm interested in ${quoteState.answers.service || ''} for my ${quoteState.answers.stage || ''} business.`;
-        const url = `https://wa.me/923058977853?text=${encodeURIComponent(pre)}`;
-        showBotWithButtons('Tap below to open WhatsApp with your message pre-filled.', [
-          { label: 'Open WhatsApp Chat', action: 'OPEN_URL', value: url },
-          { label: 'Email Us Instead', action: 'LEAD_EMAIL' },
-          { label: 'Book a Call', action: 'LEAD_BOOK' }
-        ]);
-        // once user moves to handoff, stop waiting for typed contact
-        quoteState.awaitingContact = false;
-        quoteState.awaitingEmail = false;
-      }
-      break;
-    
-    case 'LEAD_EMAIL':
-      // populate goals from quote answers (or infer from chat if missing)
-      leadFormEl.elements['goals'].value = `Interest: ${quoteState.answers.service || ''}\nStage: ${quoteState.answers.stage || ''}\nTimeline: ${quoteState.answers.timeline || ''}`;
-      // attempt to extract name/email/company/budget from recent chat
-      prefillLeadFormFromChat();
-      // if goals are empty, try to infer from recent chat messages
-      if (!leadFormEl.elements['goals'].value.trim()) {
-        const inferred = inferQuoteFromChat();
-        if (inferred.service || inferred.stage || inferred.timeline) {
-          leadFormEl.elements['goals'].value = `Interest: ${inferred.service}\nStage: ${inferred.stage}\nTimeline: ${inferred.timeline}`;
-        }
-      }
-      // check if any useful field was filled
-      const anyPrefill = (leadFormEl.elements['name'].value || leadFormEl.elements['email'].value || leadFormEl.elements['company'].value || leadFormEl.elements['budget'].value || (leadFormEl.elements['goals'].value && leadFormEl.elements['goals'].value.trim()));
-      window.scrollTo({ top: document.querySelector('.lead-card').offsetTop - 20, behavior: 'smooth' });
-      if (anyPrefill) {
-        leadStatusEl.textContent = 'Prefilled from chat — review and submit.';
-        showBotWithButtons("I've prefilled the form below. Review it and hit Submit Lead when ready.", [
-          { label: 'Scroll to form', action: 'SCROLL_LEAD_FORM' },
-          { label: 'Open WhatsApp Chat', action: 'LEAD_WHATSAPP' },
-          { label: 'Book a Call', action: 'LEAD_BOOK' }
-        ]);
-        // allow typed name/email to fill form too
-        quoteState.awaitingContact = true;
-        quoteState.awaitingEmail = false;
-      } else {
-        // nothing to prefill — be honest and open the form for manual entry
-        leadStatusEl.textContent = '';
-        showBotWithButtons('I opened the lead form — please fill your details and submit when ready.', [
-          { label: 'Scroll to form', action: 'SCROLL_LEAD_FORM' },
-          { label: 'WhatsApp Us', action: 'WHATSAPP' },
-          { label: 'Book a Call', action: 'LEAD_BOOK' }
-        ]);
-        quoteState.awaitingContact = true;
-        quoteState.awaitingEmail = false;
-      }
-      break;
-    case 'LEAD_BOOK':
-      showBotWithButtons('I can open our booking calendar — pick a time and we’ll join with context from this chat.', [
-        { label: 'Open Booking Calendar', action: 'OPEN_URL', value: 'https://calendly.com/' },
-        { label: 'WhatsApp Us', action: 'LEAD_WHATSAPP' },
-        { label: 'Email Us', action: 'LEAD_EMAIL' }
-      ]);
-      break;
-    case 'EMAIL':
-      // keep contact options minimal — open lead form or handoff channels
-      showBotWithButtons('You can open the lead form or reach the team directly.', [
-        { label: 'Open lead form', action: 'LEAD_EMAIL' },
-        { label: 'WhatsApp Us', action: 'WHATSAPP' },
-        { label: 'Book a Call', action: 'BOOK' }
-      ]);
-      break;
-    case 'BOOK':
-      showBotWithButtons('Here’s our booking calendar. Choose a slot and the team will be ready with context from this chat.', [
-        { label: 'Open Booking Calendar', action: 'OPEN_URL', value: 'https://calendly.com/' },
-        { label: 'WhatsApp Us', action: 'WHATSAPP' },
-        { label: 'Email Us', action: 'EMAIL' }
-      ]);
-      break;
-    case 'SEE_WORK':
-      showBotWithButtons('We’ve helped brands grow with measurable results — websites, paid ads, content campaigns and conversion-focused design. Tap "View Portfolio" to open examples in a new tab.', [
-        { label: 'View Portfolio', action: 'OPEN_URL', value: 'https://digitaldivapro.com/portfolio' },
-        { label: 'Get a Quote', action: 'GET_QUOTE' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-      ]);
-      break;
-    case 'ABOUT':
-      showBotWithButtons('Digital Diva is a boutique digital marketing agency focused on growth for brands in Pakistan and international markets. We offer strategy, content, ads, web and analytics — founded to help small teams scale efficiently with data-driven campaigns.', [
-        { label: 'See Our Work', action: 'SEE_WORK' },
-        { label: 'Get a Quote', action: 'GET_QUOTE' },
-        { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-      ]);
-      break;
-    case 'OPEN_URL':
-      try {
-        if (value) window.open(value, '_blank');
-      } catch (e) {
-        console.log('Failed to open URL', value, e);
-      }
-      break;
-    default:
-      // no-op / fallback
-      console.log('Unhandled action', action, value);
+  if (buttons.length) {
+    const row = document.createElement('div');
+    row.className = 'followups-row';
+    buttons.forEach(b => {
+      const btn = document.createElement('button');
+      btn.className = 'quick-reply';
+      btn.textContent = b.label;
+      btn.addEventListener('click', () => handleAction(b.action, b.value));
+      row.appendChild(btn);
+    });
+    followupsEl.appendChild(row);
   }
+
+  renderPersistentButtons();
+  chatEl.scrollTop = chatEl.scrollHeight;
 }
+
+/** Always-visible persistent action buttons */
+function renderPersistentButtons() {
+  if (followupsEl.querySelector('.persistent-actions')) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'persistent-actions';
+  const mainBtn = document.createElement('button');
+  mainBtn.textContent = '⌂ Main Menu';
+  mainBtn.className = 'quick-reply';
+  mainBtn.addEventListener('click', () => handleAction('MAIN_MENU'));
+  wrap.appendChild(mainBtn);
+  followupsEl.appendChild(wrap);
+}
+
+// ── Main Menu ─────────────────────────────────────────────────────
 
 function showMainMenu() {
-  showBotWithButtons('Hi, I’m Diva 👋 from Digital Diva — we run marketing for brands across Pakistan and internationally. How can I help today?', [
-    { label: 'Explore Services', action: 'EXPLORE_SERVICES' },
-    { label: 'Get a Quote', action: 'GET_QUOTE' },
-    { label: 'See Our Work', action: 'SEE_WORK' },
-    { label: 'About Digital Diva', action: 'ABOUT' }
+  showBotWithButtons(
+    "Hi! I'm Diva 👋 — your AI guide from Digital Diva. We help brands grow across Pakistan and internationally with data-driven marketing. How can I help you today?",
+    [
+      { label: '🚀 Explore Services',    action: 'EXPLORE_SERVICES' },
+      { label: '💬 Get a Quote',         action: 'GET_QUOTE' },
+      { label: '📂 See Our Work',        action: 'SEE_WORK' },
+      { label: '🏢 About Digital Diva',  action: 'ABOUT' },
+      { label: '📞 Talk to the Team',    action: 'TALK_TO_TEAM' }
+    ]
+  );
+}
+
+// ── Quote Flow Helpers ────────────────────────────────────────────
+
+function showBusinessStage(extraText = '') {
+  let prompt = `${extraText}And which best describes your business right now?`;
+  showBotWithButtons(prompt, [
+    { label: '🌱 Startup / New business',     action: 'BUSINESS_STAGE', value: 'Startup' },
+    { label: '📈 Established / Growth',        action: 'BUSINESS_STAGE', value: 'Established' },
+    { label: '🛒 E-commerce / Selling online', action: 'BUSINESS_STAGE', value: 'E-commerce' },
+    { label: '🔍 Other',                       action: 'BUSINESS_STAGE', value: 'Other' }
   ]);
 }
 
@@ -424,293 +180,429 @@ function startQuoteFlow(prefill) {
   quoteState.inProgress = true;
   quoteState.step = 1;
   quoteState.answers = { category: prefill || '' };
-  showBotWithButtons('Happy to help 🌟 Mind if I ask a couple of quick things first? It’ll help me point you to the right place — takes a minute.', [
-    { label: "Sure, let's go", action: 'QUOTE_B1_SURE' },
-    { label: 'Just give me pricing info', action: 'QUOTE_B1_PRICING' }
-  ]);
+  showBotWithButtons(
+    'Happy to help 🌟 Mind if I ask a couple of quick things first? It helps me point you to the right package — takes less than a minute.',
+    [
+      { label: "Sure, let's go 👉",   action: 'QUOTE_B1_SURE' },
+      { label: 'Just show me pricing', action: 'QUOTE_B1_PRICING' }
+    ]
+  );
 }
 
-// keyword routing (English + Roman Urdu snippets)
-function getPackageSetDescription() {
-  const set = quoteState.packageSet;
-  if (set === 'A') {
-    return 'Set A is a tiered PKR Marketing Plan for one-specific-service requests in Pakistan or when the region is unknown.';
+// ── Action Handler ────────────────────────────────────────────────
+
+function handleAction(action, value) {
+  switch ((action || '').toString()) {
+
+    case 'MAIN_MENU':
+      showMainMenu();
+      break;
+
+    case 'TALK_TO_TEAM':
+      showBotWithButtons('Of course — here are the best ways to reach us directly:', [
+        { label: '💬 WhatsApp Us', action: 'WHATSAPP' },
+        { label: '📧 Email / Lead Form', action: 'EMAIL' },
+        { label: '📅 Book a Call', action: 'BOOK' }
+      ]);
+      break;
+
+    case 'EXPLORE_SERVICES':
+      showBotWithButtons('We cover everything your brand needs to grow online. What area interests you?', [
+        { label: '📈 Growth & Visibility (SEO/Ads)',  action: 'EXPLORE_SEO' },
+        { label: '✍️ Content & Creative',             action: 'EXPLORE_CONTENT' },
+        { label: '🌐 Web & Shopify',                  action: 'EXPLORE_WEB' },
+        { label: '📧 Email & Retention',              action: 'EXPLORE_EMAIL' },
+        { label: '🤖 AI Automation',                  action: 'EXPLORE_AI' },
+        { label: '📋 Show me everything',             action: 'EXPLORE_ALL' }
+      ]);
+      break;
+
+    case 'EXPLORE_SEO':
+      showBotWithButtons(
+        "Our Growth & Visibility team gets your brand seen by the right people:\n\n• SEO — technical audits, on-page optimisation, content that ranks\n• Paid Ads — Google, Meta, TikTok targeting & creative testing\n• Analytics — live dashboards and regular performance check-ins",
+        [
+          { label: '💰 Get a quote for this', action: 'GET_QUOTE_FOR_SEO' },
+          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
+          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'EXPLORE_CONTENT':
+      showBotWithButtons(
+        "Our Content & Creative team produces everything from social posts to full campaigns:\n\n• Content Marketing — blogs, copywriting, strategy\n• Graphic Design — brand identity, social creatives, ads\n• Video — reels, explainers, branded content",
+        [
+          { label: '💰 Get a quote for this', action: 'GET_QUOTE_FOR_CONTENT' },
+          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
+          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'EXPLORE_WEB':
+      showBotWithButtons(
+        "We design, build, and maintain websites and online stores:\n\n• WordPress — fast, conversion-focused websites\n• Shopify — product stores with built-in SEO\n• On-page optimisation from day one",
+        [
+          { label: '💰 Get a quote for this', action: 'GET_QUOTE_FOR_WEB' },
+          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
+          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'EXPLORE_EMAIL':
+      showBotWithButtons(
+        "We help brands stay top-of-mind and turn one-time buyers into repeat customers:\n\n• Email Marketing — campaigns, automations, list building\n• Lifecycle campaigns — nurture, retention, win-back flows",
+        [
+          { label: '💰 Get a quote for this', action: 'GET_QUOTE_FOR_EMAIL' },
+          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
+          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'EXPLORE_AI':
+      showBotWithButtons(
+        "AI Automation is one of our fastest-growing services:\n\n• WhatsApp & website chatbots that qualify leads 24/7\n• Automated follow-up sequences\n• AI-powered customer workflows\n• CRM & tool integrations",
+        [
+          { label: '💰 Get a quote for this', action: 'GET_QUOTE' },
+          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
+          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'EXPLORE_ALL':
+      showBotWithButtons(
+        "Here's the full picture of what we do:\n\nSEO · Paid Ads · Social Media · Content Marketing · Email Marketing · Web Development · Shopify · Graphic Design · Video Production · Branding · AI Automation · Analytics & Strategy",
+        [
+          { label: '💰 Get a quote', action: 'GET_QUOTE' },
+          { label: '📞 Talk to the Team', action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'GET_QUOTE':
+      startQuoteFlow();
+      break;
+
+    case 'GET_QUOTE_FOR_SEO':
+    case 'GET_QUOTE_FOR_CONTENT':
+    case 'GET_QUOTE_FOR_WEB':
+    case 'GET_QUOTE_FOR_EMAIL':
+      startQuoteFlow(value || action.replace('GET_QUOTE_FOR_', ''));
+      break;
+
+    case 'QUOTE_B1_SURE':
+      quoteState.inProgress = true;
+      quoteState.step = 2;
+      quoteState.answers = { category: quoteState.answers.category || '' };
+      showBotWithButtons('First up — are you looking for help with one specific service, or broader ongoing marketing support?', [
+        { label: 'One specific service',                action: 'QUOTE_ONE' },
+        { label: 'Full marketing support (everything)', action: 'QUOTE_FULL' },
+        { label: "I'm a new business / startup",        action: 'QUOTE_STARTUP' },
+        { label: 'Not sure yet',                        action: 'QUOTE_NOT_SURE' }
+      ]);
+      break;
+
+    case 'QUOTE_B1_PRICING':
+      quoteState.inProgress = true;
+      quoteState.step = 2;
+      quoteState.answers = { category: quoteState.answers.category || '' };
+      showBotWithButtons('Which service are you looking for pricing on?', [
+        { label: 'SEO',                  action: 'QUOTE_SERVICE', value: 'SEO' },
+        { label: 'Paid Ads',             action: 'QUOTE_SERVICE', value: 'Paid Ads' },
+        { label: 'Content & Social',     action: 'QUOTE_SERVICE', value: 'Content & Social' },
+        { label: 'Website (WordPress)', action: 'QUOTE_SERVICE', value: 'Website' },
+        { label: 'Shopify Store',        action: 'QUOTE_SERVICE', value: 'Shopify' },
+        { label: 'Email Marketing',      action: 'QUOTE_SERVICE', value: 'Email' },
+        { label: 'AI Automation',        action: 'QUOTE_SERVICE', value: 'AI Automation' }
+      ]);
+      break;
+
+    case 'QUOTE_ONE':
+      quoteState.answers.scope = 'one';
+      quoteState.step = 3;
+      showBotWithButtons('Which service?', [
+        { label: 'SEO',              action: 'QUOTE_SERVICE', value: 'SEO' },
+        { label: 'Paid Ads',         action: 'QUOTE_SERVICE', value: 'Paid Ads' },
+        { label: 'Content & Social', action: 'QUOTE_SERVICE', value: 'Content & Social' },
+        { label: 'Website',          action: 'QUOTE_SERVICE', value: 'Website' },
+        { label: 'Shopify Store',    action: 'QUOTE_SERVICE', value: 'Shopify' },
+        { label: 'Email Marketing',  action: 'QUOTE_SERVICE', value: 'Email' },
+        { label: 'AI Automation',    action: 'QUOTE_SERVICE', value: 'AI Automation' },
+        { label: 'Something else',   action: 'QUOTE_SERVICE', value: 'Other' }
+      ]);
+      break;
+
+    case 'QUOTE_FULL':
+      quoteState.answers.scope = 'full';
+      quoteState.step = 4;
+      showBusinessStage("That's our favourite kind of project — we can plan everything together. ");
+      break;
+
+    case 'QUOTE_STARTUP':
+      quoteState.answers.scope = 'startup';
+      quoteState.step = 4;
+      showBusinessStage();
+      break;
+
+    case 'QUOTE_NOT_SURE':
+      quoteState.answers.scope = 'not_sure';
+      quoteState.step = 4;
+      showBusinessStage();
+      break;
+
+    case 'QUOTE_SERVICE':
+      quoteState.answers.service = value;
+      if (!quoteState.answers.scope) {
+        quoteState.answers.scope = 'one';
+        quoteState.step = 3;
+        showBotWithButtons('Are you based in Pakistan, or is this an international project?', [
+          { label: '🇵🇰 Pakistan / PKR',       action: 'QUOTE_REGION', value: 'pakistan' },
+          { label: '🌍 International / USD',    action: 'QUOTE_REGION', value: 'international' }
+        ]);
+        return;
+      }
+      quoteState.step = 4;
+      showBusinessStage();
+      break;
+
+    case 'QUOTE_REGION':
+      quoteState.region = value;
+      quoteState.step = 4;
+      showBusinessStage();
+      break;
+
+    case 'BUSINESS_STAGE':
+      quoteState.answers.stage = value;
+      quoteState.step = 5;
+      let extra = '';
+      if (quoteState.answers.service === 'SEO' && value === 'Startup') {
+        extra = "For brand-new sites, we usually pair SEO with a quick technical check first so nothing holds the site back before we start building rankings.\n\n";
+      } else if (quoteState.answers.service === 'Shopify' && value === 'E-commerce') {
+        extra = "If you're already selling, a quick look at your store setup alongside ads can make paid traffic convert much better.\n\n";
+      }
+      showBotWithButtons(`${extra}Last one — when are you hoping to get started?`, [
+        { label: '⚡ Right away',           action: 'TIMELINE', value: 'Right away' },
+        { label: '📅 Within a month',       action: 'TIMELINE', value: 'Within a month' },
+        { label: '🔍 Just exploring options', action: 'TIMELINE', value: 'Exploring' }
+      ]);
+      break;
+
+    case 'TIMELINE':
+      quoteState.answers.timeline = value;
+      quoteState.step = 6;
+      quoteState.packageSet = getPackageSet();
+      const setName = getPackageSetName();
+      const packageText = getPackageSetDescription();
+      showBotWithButtons(
+        `Here's what this usually maps to: **${setName}**\n\n${packageText}\n\nThe team will confirm exact numbers after a quick review of your goals.`,
+        [
+          { label: '📋 Tell me more',         action: 'PACKAGE_TELL_MORE' },
+          { label: '📝 Custom quote',          action: 'TALK_TO_TEAM' },
+          { label: '📞 Talk to the Team',      action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'PACKAGE_TELL_MORE':
+      showBotWithButtons(
+        'Our packages scale with your scope. The team confirms the right starting point after reviewing your goals. Ready to connect?',
+        [
+          { label: '📞 Contact options', action: 'LEAD_OPTIONS' },
+          { label: '📞 Talk to Team',    action: 'TALK_TO_TEAM' },
+          { label: '⌂ Main Menu',        action: 'MAIN_MENU' }
+        ]
+      );
+      break;
+
+    case 'LEAD_OPTIONS':
+      quoteState.awaitingContact = true;
+      quoteState.awaitingEmail = false;
+      showBotWithButtons('Great — how would you like to continue?', [
+        { label: '💬 Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
+        { label: '📧 Fill lead form',       action: 'LEAD_EMAIL' },
+        { label: '📅 Book a call directly', action: 'LEAD_BOOK' }
+      ]);
+      break;
+
+    case 'LEAD_WHATSAPP': {
+      const pre = `Hi Digital Diva! I came from your website chat — I'm interested in ${quoteState.answers.service || 'your marketing services'} for my ${quoteState.answers.stage || 'business'}.`;
+      const url = buildWhatsAppUrl(pre);
+      showBotWithButtons('Tap below to open WhatsApp with your message pre-filled.', [
+        { label: '💬 Open WhatsApp Chat', action: 'OPEN_URL', value: url },
+        { label: '📧 Email Us Instead',   action: 'LEAD_EMAIL' },
+        { label: '📅 Book a Call',        action: 'LEAD_BOOK' }
+      ]);
+      quoteState.awaitingContact = false;
+      quoteState.awaitingEmail = false;
+      break;
+    }
+
+    case 'LEAD_EMAIL':
+      leadFormEl.elements['goals'].value = `Interest: ${quoteState.answers.service || ''}\nStage: ${quoteState.answers.stage || ''}\nTimeline: ${quoteState.answers.timeline || ''}`;
+      prefillLeadFormFromChat();
+      if (!leadFormEl.elements['goals'].value.trim()) {
+        const inferred = inferQuoteFromChat();
+        if (inferred.service || inferred.stage) {
+          leadFormEl.elements['goals'].value = `Interest: ${inferred.service}\nStage: ${inferred.stage}\nTimeline: ${inferred.timeline}`;
+        }
+      }
+      const anyPrefill = leadFormEl.elements['name'].value || leadFormEl.elements['email'].value || leadFormEl.elements['goals'].value.trim();
+      document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (anyPrefill) {
+        leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
+        showBotWithButtons("I've prefilled the form on the right. Review it and hit Submit when ready.", [
+          { label: '💬 WhatsApp instead', action: 'LEAD_WHATSAPP' },
+          { label: '📅 Book a Call',      action: 'LEAD_BOOK' }
+        ]);
+      } else {
+        leadStatusEl.textContent = '';
+        showBotWithButtons('The lead form is on the right — fill in your details and submit when ready.', [
+          { label: '💬 WhatsApp instead', action: 'WHATSAPP' },
+          { label: '📅 Book a Call',      action: 'LEAD_BOOK' }
+        ]);
+      }
+      quoteState.awaitingContact = true;
+      quoteState.awaitingEmail = false;
+      break;
+
+    case 'LEAD_BOOK':
+      showBotWithButtons("I can open our booking calendar — pick a time and we'll join ready.", [
+        { label: '📅 Open Booking Calendar', action: 'OPEN_URL', value: 'https://calendly.com/' },
+        { label: '💬 WhatsApp Us',           action: 'LEAD_WHATSAPP' },
+        { label: '📧 Email / Lead Form',     action: 'LEAD_EMAIL' }
+      ]);
+      break;
+
+    case 'EMAIL':
+      showBotWithButtons('You can fill the lead form or reach the team directly.', [
+        { label: '📧 Open lead form', action: 'LEAD_EMAIL' },
+        { label: '💬 WhatsApp Us',   action: 'WHATSAPP' },
+        { label: '📅 Book a Call',   action: 'BOOK' }
+      ]);
+      break;
+
+    case 'BOOK':
+      showBotWithButtons("Here's our booking calendar. Choose a slot and we'll be ready.", [
+        { label: '📅 Open Booking Calendar', action: 'OPEN_URL', value: 'https://calendly.com/' },
+        { label: '💬 WhatsApp Us',           action: 'WHATSAPP' },
+        { label: '📧 Email Us',              action: 'EMAIL' }
+      ]);
+      break;
+
+    case 'WHATSAPP':
+      handleAction('LEAD_WHATSAPP');
+      break;
+
+    case 'SEE_WORK':
+      showBotWithButtons(
+        "We've delivered 300+ projects — websites, paid ad campaigns, social content, and conversion-focused design — for brands across Pakistan, UAE, USA, UK, and more.",
+        [
+          { label: '🌐 View Portfolio', action: 'OPEN_URL', value: 'https://digitaldivapro.com/portfolio' },
+          { label: '💰 Get a Quote',    action: 'GET_QUOTE' },
+          { label: '📞 Talk to Team',  action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'ABOUT':
+      showBotWithButtons(
+        "Digital Diva is a results-driven, AI-first digital marketing agency founded by Zil-e-Huma. We operate globally — Pakistan, USA, Canada, UAE, UK, KSA, Australia and beyond.\n\nWe help businesses grow using smart strategies, high-quality content, and AI-powered solutions.",
+        [
+          { label: '📂 See Our Work',   action: 'SEE_WORK' },
+          { label: '💰 Get a Quote',    action: 'GET_QUOTE' },
+          { label: '📞 Talk to Team',   action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'OPEN_URL':
+      if (value) {
+        const w = window.open(value, '_blank');
+        if (!w) window.location.href = value;
+      }
+      break;
+
+    default:
+      console.log('Unhandled action:', action, value);
   }
-  if (set === 'B') {
-    return 'Set B is a tiered USD Full Marketing Plan for full-support requests and international visitors.';
-  }
-  if (set === 'C') {
-    return 'Set C is a fixed-price PKR Startup Bundle for new businesses and startups in Pakistan.';
-  }
-  return 'This package set is matched to the scope and region you shared.';
 }
 
-// keyword routing (English + Roman Urdu snippets)
+// ── Keyword Router ────────────────────────────────────────────────
+
 const keywordRoutes = [
-  { re: /\b(seo|ranking|google)\b/i, action: 'EXPLORE_SEO' },
-  { re: /\b(shopify|shop|e-?commerce)\b/i, action: 'EXPLORE_WEB' },
-  { re: /\b(website|web|wordpress|landing)\b/i, action: 'EXPLORE_WEB' },
+  { re: /^\s*(hi|hey|hello|salam|salaam|assalam|helo|sup|yo|hiya)\s*[!?.]?\s*$/i, action: 'MAIN_MENU' },
+  { re: /\b(seo|ranking|google|search engine)\b/i, action: 'EXPLORE_SEO' },
+  { re: /\b(shopify|shop|e-?commerce)\b/i,          action: 'EXPLORE_WEB' },
+  { re: /\b(website|web|wordpress|landing)\b/i,     action: 'EXPLORE_WEB' },
   { re: /\b(content|social|instagram|posts|reels)\b/i, action: 'EXPLORE_CONTENT' },
-  { re: /\b(ad|ads|ppc|facebook|meta|tiktok)\b/i, action: 'EXPLORE_SEO' },
+  { re: /\b(ad|ads|ppc|facebook|meta|tiktok)\b/i,   action: 'EXPLORE_SEO' },
   { re: /\b(price|cost|rates|quote|kitna|rate)\b/i, action: 'GET_QUOTE' },
-  { re: /\b(portfolio|case study|results|clients|examples|proof)\b/i, action: 'EXPLORE_ALL' },
+  { re: /\b(portfolio|case study|results|clients|examples|proof)\b/i, action: 'SEE_WORK' },
   { re: /\b(about|who are you|company|founder|kahan)\b/i, action: 'ABOUT' },
-  { re: /\b(human|agent|real person|help|baat karni)\b/i, action: 'TALK_TO_TEAM' },
-  { re: /\b(whatsapp|watsapp|whats app)\b/i, action: 'TALK_TO_TEAM' }
+  { re: /\b(human|agent|real person|baat karni)\b/i, action: 'TALK_TO_TEAM' },
+  { re: /\b(whatsapp|watsapp|whats app)\b/i,         action: 'TALK_TO_TEAM' },
+  { re: /\b(ai|automation|chatbot|bot)\b/i,          action: 'EXPLORE_AI' },
+  { re: /\b(email|newsletter|lifecycle)\b/i,         action: 'EXPLORE_EMAIL' },
+  { re: /\b(service|services|help|what do you do)\b/i, action: 'EXPLORE_SERVICES' }
 ];
 
 function routeByKeyword(text) {
-  for (const k of keywordRoutes) if (k.re.test(text)) { handleAction(k.action); return true; }
+  for (const k of keywordRoutes) {
+    if (k.re.test(text)) { handleAction(k.action); return true; }
+  }
   return false;
 }
 
-// show main menu on load
-showMainMenu();
-
-// Create review modal for lead confirmation
-const reviewModal = document.createElement('div');
-reviewModal.id = 'lead-review-modal';
-Object.assign(reviewModal.style, {
-  position: 'fixed',
-  left: '0',
-  top: '0',
-  right: '0',
-  bottom: '0',
-  background: 'rgba(0,0,0,0.4)',
-  display: 'none',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 999999
-});
-
-const reviewCard = document.createElement('div');
-Object.assign(reviewCard.style, {
-  width: 'min(600px, 96vw)',
-  background: '#fff',
-  padding: '18px',
-  borderRadius: '12px',
-  boxShadow: '0 8px 30px rgba(0,0,0,0.18)'
-});
-
-const reviewTitle = document.createElement('h3');
-reviewTitle.innerText = 'Review lead details';
-const reviewBody = document.createElement('pre');
-reviewBody.style.whiteSpace = 'pre-wrap';
-reviewBody.style.fontFamily = 'inherit';
-reviewBody.style.fontSize = '14px';
-reviewBody.style.color = '#111';
-reviewBody.style.background = '#f7f7f7';
-reviewBody.style.padding = '14px';
-reviewBody.style.borderRadius = '10px';
-reviewBody.style.border = '1px solid rgba(0,0,0,0.08)';
-
-const reviewActions = document.createElement('div');
-reviewActions.style.marginTop = '12px';
-
-const reviewConfirm = document.createElement('button');
-reviewConfirm.innerText = 'Confirm and Submit';
-Object.assign(reviewConfirm.style, { background: '#0f766e', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' });
-
-const reviewEdit = document.createElement('button');
-reviewEdit.innerText = 'Edit';
-Object.assign(reviewEdit.style, { marginLeft: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' });
-
-reviewActions.append(reviewConfirm, reviewEdit);
-reviewCard.append(reviewTitle, reviewBody, reviewActions);
-reviewModal.appendChild(reviewCard);
-document.body.appendChild(reviewModal);
-
-function showReviewModal() {
-  const data = {
-    name: leadFormEl.elements['name'].value || '',
-    email: leadFormEl.elements['email'].value || '',
-    company: leadFormEl.elements['company'].value || '',
-    budget: leadFormEl.elements['budget'].value || '',
-    goals: leadFormEl.elements['goals'].value || ''
-  };
-
-  reviewBody.textContent = `Name: ${data.name}\nEmail: ${data.email}\nCompany / URL: ${data.company}\nBudget: ${data.budget}\nGoals:\n${data.goals}`;
-
-  reviewModal.style.display = 'flex';
-}
-
-function hideReviewModal() {
-  reviewModal.style.display = 'none';
-}
-
-reviewEdit.addEventListener('click', () => {
-  hideReviewModal();
-  window.scrollTo({ top: document.querySelector('.lead-card').offsetTop - 20, behavior: 'smooth' });
-});
-
-reviewConfirm.addEventListener('click', async () => {
-  reviewConfirm.disabled = true;
-  reviewConfirm.innerText = 'Submitting...';
-
-  const payload = {
-    name: leadFormEl.elements['name'].value || '',
-    email: leadFormEl.elements['email'].value || '',
-    company: leadFormEl.elements['company'].value || '',
-    budget: leadFormEl.elements['budget'].value || '',
-    goals: leadFormEl.elements['goals'].value || '',
-    source: 'website-chatbot'
-  };
-
-  // client-side validation to avoid round-trips when data is clearly invalid
-  const validationErrors = [];
-  if (!payload.name || payload.name.trim().length < 2) validationErrors.push('name: must be at least 2 characters');
-  const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-  if (!emailRe.test(payload.email)) validationErrors.push('email: must be a valid email address');
-  if (!payload.goals || payload.goals.trim().length < 3) validationErrors.push('goals: must be at least 3 characters');
-
-  if (validationErrors.length) {
-    reviewBody.textContent = 'Please fix the following before submitting:\n' + validationErrors.join('\n');
-    reviewConfirm.disabled = false;
-    reviewConfirm.innerText = 'Confirm and Submit';
-    return;
-  }
-  try {
-    const resp = await fetch('/api/lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    const j = await resp.json();
-    if (resp.ok) {
-      hideReviewModal();
-      leadFormEl.reset();
-      leadStatusEl.textContent = 'Thanks — your details have been submitted.';
-    } else {
-      // show validation details when available
-      let msg = 'Submission failed: ' + (j.error || JSON.stringify(j));
-      if (j.details && Array.isArray(j.details) && j.details.length) {
-        const parts = j.details.map(d => {
-          const path = (d.path && d.path.length) ? d.path.join('.') : '(field)';
-          return `${path}: ${d.message}`;
-        });
-        msg += '\n\nValidation errors:\n' + parts.join('\n');
-      }
-      reviewBody.textContent = msg;
-    }
-  } catch (err) {
-    reviewBody.textContent = 'Submission failed: ' + String(err);
-  }
-
-  reviewConfirm.disabled = false;
-  reviewConfirm.innerText = 'Confirm and Submit';
-});
-
-function appendMessage(text, role) {
-  const div = document.createElement("div");
-  div.className = `msg ${role}`;
-  div.textContent = text;
-  chatEl.appendChild(div);
-  chatEl.scrollTop = chatEl.scrollHeight;
-}
-
-function clearFollowups() {
-  followupsEl.innerHTML = '';
-}
-
-function parseAndShowFollowups(botText) {
-  clearFollowups();
-
-  // detect numbered questions lines like '1. What is your website URL?'
-  const lines = botText.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  const qlines = lines.filter(l => /^\d+\./.test(l));
-  if (!qlines.length) return;
-
-  qlines.forEach(q => {
-    const btn = document.createElement('button');
-    btn.className = 'quick-reply';
-    btn.style.marginRight = '8px';
-    btn.style.marginBottom = '8px';
-    btn.textContent = q.replace(/^\d+\.\s*/, '');
-    btn.addEventListener('click', () => {
-      // place question into input for user's convenience
-      messageEl.value = btn.textContent;
-      messageEl.focus();
-    });
-    followupsEl.appendChild(btn);
-  });
-
-  // add a button to auto-fill lead form from follow-ups
-  const leadBtn = document.createElement('button');
-  leadBtn.textContent = 'Fill lead form';
-  leadBtn.style.display = 'inline-block';
-  leadBtn.style.marginLeft = '6px';
-  leadBtn.addEventListener('click', () => {
-    // try to prefill lead form using known messages in chat
-    const msgs = Array.from(chatEl.querySelectorAll('.msg.user')).map(n => n.textContent.trim());
-    // naive extraction
-    const url = msgs.find(m => m.startsWith('http')) || msgs.find(m => m.includes('http')) || '';
-    if (url) leadFormEl.elements['company'].value = url;
-    leadFormEl.elements['goals'].value = msgs.join('\n');
-    leadStatusEl.textContent = 'Lead form prefilled — review and submit.';
-  });
-  followupsEl.appendChild(leadBtn);
-}
+// ── Lead Form Helpers ─────────────────────────────────────────────
 
 function prefillLeadFormFromChat() {
-  // scan recent chat messages (user + bot) for useful lead info
   const nodes = Array.from(chatEl.querySelectorAll('.msg')).slice(-12);
-  const texts = nodes.map(n => n.textContent.trim());
-  const joined = texts.join('\n');
-  const emailRe = /[^@\s]+@[^@\s]+\.[^@\s]+/;
-  const urlRe = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/i;
+  const joined = nodes.map(n => n.textContent.trim()).join('\n');
+  const emailRe  = /[^@\s]+@[^@\s]+\.[^@\s]+/;
+  const urlRe    = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/i;
   const budgetRe = /\b(\d{3,}(k)?\b|rs\b|pkr\b|usd\b|\$\d+[\d,]*)/i;
 
-  // email
   const foundEmail = joined.match(emailRe);
   if (foundEmail) leadFormEl.elements['email'].value = foundEmail[0];
-
-  // company / url
   const foundUrl = joined.match(urlRe);
   if (foundUrl) leadFormEl.elements['company'].value = foundUrl[0];
-
-  // budget
   const foundBudget = joined.match(budgetRe);
   if (foundBudget) leadFormEl.elements['budget'].value = foundBudget[0];
 
-  // name heuristic: look for a short user message (1-3 words) near the end
   const userMsgs = Array.from(chatEl.querySelectorAll('.msg.user')).map(n => n.textContent.trim());
   const candidate = userMsgs.slice().reverse().find(m => {
     const w = m.split(/\s+/).length;
-    return w >= 1 && w <= 3 && m.length <= 30 && !emailRe.test(m) && !urlRe.test(m) && !/\b(yes|no|thanks|thank you|ok|okay|sure|hi|hello)\b/i.test(m);
+    return w >= 1 && w <= 3 && m.length <= 30 && !emailRe.test(m) && !urlRe.test(m) && !/\b(yes|no|thanks|ok|okay|sure|hi|hello)\b/i.test(m);
   });
-  if (candidate && !leadFormEl.elements['name'].value) leadFormEl.elements['name'].value = candidate.split('\n')[0];
-
-  // if we found anything, update status
-  if (foundEmail || foundUrl || foundBudget || candidate) {
-    leadStatusEl.textContent = 'Prefilled from chat — review and submit.';
+  if (candidate && !leadFormEl.elements['name'].value) {
+    leadFormEl.elements['name'].value = candidate.split('\n')[0];
   }
 }
 
 function inferQuoteFromChat() {
   const nodes = Array.from(chatEl.querySelectorAll('.msg')).slice(-20);
   const joined = nodes.map(n => n.textContent.toLowerCase()).join('\n');
-  let service = '';
+  let service = '', stage = '', timeline = '';
   if (/\b(seo|search|ranking)\b/.test(joined)) service = 'SEO';
   else if (/\b(ad|ads|ppc|facebook|meta|tiktok)\b/.test(joined)) service = 'Paid Ads';
-  else if (/\b(content|social|instagram|reels|posts)\b/.test(joined)) service = 'Content & Social';
+  else if (/\b(content|social|instagram|reels)\b/.test(joined)) service = 'Content & Social';
   else if (/\b(shopify|shop|store|e-?commerce)\b/.test(joined)) service = 'Shopify/Website';
-  else if (/\b(email|newsletter|lifecycle)\b/.test(joined)) service = 'Email Marketing';
-
-  let stage = '';
-  if (/\b(startup|new business|new company)\b/.test(joined)) stage = 'Startup';
-  else if (/\b(established|growth|scale|scaling)\b/.test(joined)) stage = 'Established';
-  else if (/\b(e-?commerce|selling|store)\b/.test(joined)) stage = 'E-commerce';
-
-  let timeline = '';
-  if (/\b(right away|asap|immediately|now)\b/.test(joined)) timeline = 'Right away';
-  else if (/\b(within a month|next month|in a month)\b/.test(joined)) timeline = 'Within a month';
-  else if (/\b(just exploring|exploring|not sure|thinking)\b/.test(joined)) timeline = 'Exploring options';
-
+  else if (/\b(email|newsletter)\b/.test(joined)) service = 'Email Marketing';
+  if (/\b(startup|new business)\b/.test(joined)) stage = 'Startup';
+  else if (/\b(established|growth|scale)\b/.test(joined)) stage = 'Established';
+  else if (/\b(e-?commerce|selling)\b/.test(joined)) stage = 'E-commerce';
+  if (/\b(right away|asap|now)\b/.test(joined)) timeline = 'Right away';
+  else if (/\b(within a month|next month)\b/.test(joined)) timeline = 'Within a month';
   return { service, stage, timeline };
 }
 
-async function sendMessage(text) {
-  appendMessage(text, "user");
-  quoteState.region = detectRegionFromText(text);
-  // If lead capture is active, accept typed contact info
+// ── Lead Capture (typed input flow) ──────────────────────────────
+
+async function handleTypedLeadCapture(text) {
   if (quoteState.awaitingContact) {
-    // If user included an email along with name, extract both
     const emailRe = /[^@\s]+@[^@\s]+\.[^@\s]+/;
     const possibleEmail = text.match(emailRe);
     let name = text.replace(emailRe, '').trim();
@@ -722,183 +614,268 @@ async function sendMessage(text) {
       leadDraftName = name;
       quoteState.awaitingContact = false;
       quoteState.awaitingEmail = false;
-      leadStatusEl.textContent = 'Prefilled from chat — review and submit.';
-      appendMessage(`Thanks ${name} — I added your email too. You can review the form and submit when ready.`, 'bot');
-      window.scrollTo({ top: document.querySelector('.lead-card').offsetTop - 20, behavior: 'smooth' });
-      return;
+      leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
+      appendMessage(`Thanks ${name} — I've added your email. Review the form on the right and submit when ready.`, 'bot');
+      document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return true;
     }
-
-    // treat first typed input as name
     name = text.trim();
     if (name) {
       leadFormEl.elements['name'].value = name;
       leadDraftName = name;
       quoteState.awaitingContact = false;
       quoteState.awaitingEmail = true;
-      appendMessage(`Thanks ${name} — may I have your email next?`, 'bot');
-      return;
+      appendMessage(`Thanks ${name} — what's your email address?`, 'bot');
+      return true;
     }
   }
 
   if (quoteState.awaitingEmail) {
-    const email = text.trim();
     const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-    if (emailRe.test(email)) {
-      leadFormEl.elements['email'].value = email;
+    if (emailRe.test(text.trim())) {
+      leadFormEl.elements['email'].value = text.trim();
       quoteState.awaitingEmail = false;
-      // continue to gather company, budget and goals
-      leadStatusEl.textContent = 'Prefilled: name and email. One more step — a few quick details.';
       quoteState.awaitingCompany = true;
-      appendMessage('Thanks — could you tell me your company name (or website)?', 'bot');
-      return;
+      leadStatusEl.textContent = '✓ Name & email saved.';
+      appendMessage('Thanks — what\'s your company name or website?', 'bot');
+      return true;
     } else {
-      appendMessage('That doesn\'t look like a valid email. Please enter a correct email address.', 'bot');
-      return;
+      appendMessage("That doesn't look like a valid email. Please enter a correct email address.", 'bot');
+      return true;
     }
   }
 
-  // capture company after email
   if (quoteState.awaitingCompany) {
-    const company = text.trim();
-    if (company) {
-      leadFormEl.elements['company'].value = company;
+    if (text.trim()) {
+      leadFormEl.elements['company'].value = text.trim();
       quoteState.awaitingCompany = false;
       quoteState.awaitingBudget = true;
-      appendMessage('Great — what budget range are you considering for this project?', 'bot');
-      return;
+      appendMessage('Great — what budget range are you considering?', 'bot');
+      return true;
     }
   }
 
-  // capture budget
   if (quoteState.awaitingBudget) {
-    const budget = text.trim();
-    if (budget) {
-      leadFormEl.elements['budget'].value = budget;
+    if (text.trim()) {
+      leadFormEl.elements['budget'].value = text.trim();
       quoteState.awaitingBudget = false;
       quoteState.awaitingGoals = true;
-      appendMessage('Thanks — lastly, can you share a couple of lines about your goals for this project?', 'bot');
-      return;
+      appendMessage('Almost done — share a couple of lines about your goals for this project.', 'bot');
+      return true;
     }
   }
 
-  // capture goals (longer free text)
   if (quoteState.awaitingGoals) {
-    const goals = text.trim();
-    if (goals && goals.length >= 3) {
-      leadFormEl.elements['goals'].value = goals;
+    if (text.trim().length >= 3) {
+      leadFormEl.elements['goals'].value = text.trim();
       quoteState.awaitingGoals = false;
-      leadStatusEl.textContent = 'Prefilled from chat — review and submit.';
-      appendMessage('Awesome — I added that to the form. You can review and submit when ready, or continue on WhatsApp or Email.', 'bot');
-      // show quick handoff options
+      leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
+      appendMessage("I've added that to the form. Review and submit when ready!", 'bot');
       showBotWithButtons('How would you like to continue?', [
-        { label: 'Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
-        { label: 'Continue by Email', action: 'LEAD_EMAIL' },
-        { label: 'Book a call', action: 'LEAD_BOOK' }
+        { label: '💬 Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
+        { label: '📧 Fill lead form',       action: 'LEAD_EMAIL' },
+        { label: '📅 Book a call',          action: 'LEAD_BOOK' }
       ]);
-      // scroll to form for convenience
-      window.scrollTo({ top: document.querySelector('.lead-card').offsetTop - 20, behavior: 'smooth' });
-      return;
+      document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return true;
     } else {
-      appendMessage('Please provide a short description of your goals (a sentence or two).', 'bot');
-      return;
+      appendMessage('Please provide a short description of your goals (at least a sentence).', 'bot');
+      return true;
     }
   }
 
-  // run keyword router before sending to backend
+  return false;
+}
+
+// ── Send Message ──────────────────────────────────────────────────
+
+async function sendMessage(text) {
+  appendMessage(text, 'user');
+  quoteState.region = detectRegionFromText(text);
+
+  // typed lead capture mode
+  const capturedByLead = await handleTypedLeadCapture(text);
+  if (capturedByLead) return;
+
+  // keyword routing — includes greetings
   if (routeByKeyword(text)) return;
 
+  // fallback to AI API
+  showTyping();
   try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sessionId,
         message: text,
-        metadata: {
-          page: window.location.pathname,
-          source: "website"
-        }
+        metadata: { page: window.location.pathname, source: 'website' }
       })
     });
-
     const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Chat failed");
-    }
-
+    hideTyping();
+    if (!response.ok) throw new Error(data.error || 'Chat failed');
     sessionId = data.sessionId;
-    appendMessage(data.reply, "bot");
-    parseAndShowFollowups(data.reply);
+    appendMessage(data.reply, 'bot');
+    renderPersistentButtons();
   } catch (error) {
-    appendMessage("I am having trouble right now. Please try again in a moment.", "bot");
+    hideTyping();
+    appendMessage("I'm having trouble right now. Please try again in a moment or reach us directly.", 'bot');
     console.error(error);
   }
 }
 
-quickActionsEl.addEventListener("click", async (event) => {
-  const buttonAction = event.target.closest("button[data-action]");
-  if (buttonAction) {
-    handleAction(buttonAction.dataset.action);
+// ── Site Audit ────────────────────────────────────────────────────
+
+async function runAudit(url) {
+  appendMessage(url, 'user');
+  showTyping();
+  try {
+    const r = await fetch('/api/audit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const j = await r.json();
+    hideTyping();
+    if (r.ok && j.report) {
+      const rep = j.report;
+      const out = [
+        `🌐 Status: ${rep.status}`,
+        `📝 Title: ${rep.title || '—'}`,
+        `📋 Meta description: ${rep.metaDescription ? 'present ✓' : 'missing ✗'}`,
+        `🔤 H1: ${rep.h1 || 'missing ✗'}`,
+        `📱 Viewport meta: ${rep.hasViewport ? 'present ✓' : 'missing ✗'}`
+      ];
+      appendMessage(out.join('\n'), 'bot');
+      leadFormEl.elements['company'].value = url;
+      leadFormEl.elements['goals'].value = `Site audit:\nTitle: ${rep.title || ''}\nMeta: ${rep.metaDescription || ''}`;
+      leadStatusEl.textContent = '✓ Site audit complete — lead form prefilled.';
+    } else {
+      appendMessage('Site audit failed. Please check the URL and try again.', 'bot');
+    }
+  } catch (err) {
+    hideTyping();
+    appendMessage('Site audit failed: ' + String(err), 'bot');
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────────────
+
+function showReviewModal() {
+  const data = {
+    name:    leadFormEl.elements['name'].value || '',
+    email:   leadFormEl.elements['email'].value || '',
+    company: leadFormEl.elements['company'].value || '',
+    budget:  leadFormEl.elements['budget'].value || '',
+    goals:   leadFormEl.elements['goals'].value || ''
+  };
+  modalBody.textContent = `Name:     ${data.name}\nEmail:    ${data.email}\nCompany:  ${data.company}\nBudget:   ${data.budget}\n\nGoals:\n${data.goals}`;
+  reviewModal.classList.add('open');
+}
+
+function hideReviewModal() {
+  reviewModal.classList.remove('open');
+}
+
+modalClose && modalClose.addEventListener('click', hideReviewModal);
+reviewModal && reviewModal.addEventListener('click', e => { if (e.target === reviewModal) hideReviewModal(); });
+
+reviewEdit && reviewEdit.addEventListener('click', () => {
+  hideReviewModal();
+  document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+reviewConfirm && reviewConfirm.addEventListener('click', async () => {
+  reviewConfirm.disabled = true;
+  reviewConfirm.textContent = 'Submitting…';
+
+  const payload = {
+    name:    leadFormEl.elements['name'].value || '',
+    email:   leadFormEl.elements['email'].value || '',
+    company: leadFormEl.elements['company'].value || '',
+    budget:  leadFormEl.elements['budget'].value || '',
+    goals:   leadFormEl.elements['goals'].value || '',
+    source:  'website-chatbot'
+  };
+
+  const errors = [];
+  if (!payload.name || payload.name.trim().length < 2) errors.push('Name must be at least 2 characters');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(payload.email)) errors.push('Please enter a valid email address');
+  if (!payload.goals || payload.goals.trim().length < 3) errors.push('Goals must be at least a few words');
+
+  if (errors.length) {
+    modalBody.textContent = 'Please fix:\n\n' + errors.join('\n');
+    reviewConfirm.disabled = false;
+    reviewConfirm.textContent = 'Confirm & Submit';
     return;
   }
 
-  const button = event.target.closest("button[data-text]");
-  if (button) {
-    await sendMessage(button.dataset.text);
+  try {
+    const resp = await fetch('/api/lead', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await resp.json();
+    if (resp.ok) {
+      hideReviewModal();
+      leadFormEl.reset();
+      leadStatusEl.textContent = '✅ Submitted! We\'ll be in touch within 24 hours.';
+      showBotWithButtons('Your proposal request has been submitted! 🎉 Our team will reach out within 24 hours. In the meantime, feel free to explore our work.', [
+        { label: '🌐 View Portfolio', action: 'OPEN_URL', value: 'https://digitaldivapro.com/portfolio' },
+        { label: '💬 WhatsApp Us',   action: 'LEAD_WHATSAPP' }
+      ]);
+    } else {
+      let msg = 'Submission failed: ' + (j.error || JSON.stringify(j));
+      if (j.details && Array.isArray(j.details) && j.details.length) {
+        msg += '\n\n' + j.details.map(d => `${(d.path || []).join('.')}: ${d.message}`).join('\n');
+      }
+      modalBody.textContent = msg;
+    }
+  } catch (err) {
+    modalBody.textContent = 'Submission failed: ' + String(err);
   }
+  reviewConfirm.disabled = false;
+  reviewConfirm.textContent = 'Confirm & Submit';
 });
 
-leadFormEl.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  showReviewModal();
+// ── Event Listeners ───────────────────────────────────────────────
+
+// New chat
+newChatBtn && newChatBtn.addEventListener('click', () => {
+  chatEl.innerHTML = '';
+  clearFollowups();
+  Object.assign(quoteState, {
+    inProgress: false, step: 0, answers: {}, region: 'pakistan', packageSet: null,
+    awaitingContact: false, awaitingEmail: false, awaitingCompany: false,
+    awaitingBudget: false, awaitingGoals: false
+  });
+  leadStatusEl.textContent = '';
+  sessionId = '';
+  showMainMenu();
 });
 
-// Detect when user types a URL answer and run lightweight audit
-messageEl.addEventListener('keydown', async (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) return; // let form submit handle
-});
-
-// Simple watcher to run audit when user pastes a URL and presses send
-formEl.addEventListener('submit', async (event) => {
-  event.preventDefault();
+// Form submit
+formEl && formEl.addEventListener('submit', async (e) => {
+  e.preventDefault();
   const text = messageEl.value.trim();
   if (!text) return;
+  messageEl.value = '';
+  messageEl.focus();
 
-  // If message looks like a url, run audit first
+  // URL audit
   if (/^https?:\/\//i.test(text)) {
-    appendMessage(text, 'user');
-    messageEl.value = '';
-    appendMessage('Running quick site audit...', 'bot');
-    try {
-      const r = await fetch('/api/audit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: text }) });
-      const j = await r.json();
-      if (r.ok && j.report) {
-        const rep = j.report;
-        const out = [];
-        out.push(`Status: ${rep.status} (length ${rep.length} chars)`);
-        out.push(`Title: ${rep.title || '—'}`);
-        out.push(`Meta description: ${rep.metaDescription ? 'present' : 'missing'}`);
-        out.push(`H1: ${rep.h1 ? rep.h1 : 'missing'}`);
-        out.push(`Has viewport meta: ${rep.hasViewport}`);
-        appendMessage(out.join('\n'), 'bot');
-        // prefill lead form company with URL and goals
-        leadFormEl.elements['company'].value = text;
-        leadFormEl.elements['goals'].value = `Site audit summary:\nTitle: ${rep.title || ''}\nMeta: ${rep.metaDescription || ''}`;
-        leadStatusEl.textContent = 'Site audit complete — lead form prefilled.';
-      } else {
-        appendMessage('Site audit failed.', 'bot');
-      }
-    } catch (err) {
-      appendMessage('Site audit failed: ' + String(err), 'bot');
-    }
-
+    await runAudit(text);
     return;
   }
 
-  // otherwise do the normal send
-  messageEl.value = '';
   await sendMessage(text);
 });
 
-// Initial menu rendered below
+// Lead form submit
+leadFormEl && leadFormEl.addEventListener('submit', (e) => {
+  e.preventDefault();
+  showReviewModal();
+});
+
+// ── Init ──────────────────────────────────────────────────────────
+showMainMenu();
