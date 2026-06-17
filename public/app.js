@@ -114,26 +114,36 @@ function clearFollowups() {
   followupsEl.innerHTML = '';
 }
 
-/** Render bot message + quick-reply buttons */
+/** Render bot message + quick-reply buttons with typing delay */
 function showBotWithButtons(text, buttons = []) {
-  appendMessage(text, 'bot');
   clearFollowups();
+  showTyping();
+  
+  const delay = Math.min(1200, Math.max(600, text.length * 15));
+  
+  setTimeout(() => {
+    hideTyping();
+    appendMessage(text, 'bot');
 
-  if (buttons.length) {
-    const row = document.createElement('div');
-    row.className = 'followups-row';
-    buttons.forEach(b => {
-      const btn = document.createElement('button');
-      btn.className = 'quick-reply';
-      btn.textContent = b.label;
-      btn.addEventListener('click', () => handleAction(b.action, b.value));
-      row.appendChild(btn);
-    });
-    followupsEl.appendChild(row);
-  }
+    if (buttons.length) {
+      const row = document.createElement('div');
+      row.className = 'followups-row';
+      buttons.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-reply';
+        btn.textContent = b.label;
+        btn.addEventListener('click', () => {
+          appendMessage(b.label, 'user');
+          handleAction(b.action, b.value);
+        });
+        row.appendChild(btn);
+      });
+      followupsEl.appendChild(row);
+    }
 
-  renderPersistentButtons();
-  chatEl.scrollTop = chatEl.scrollHeight;
+    renderPersistentButtons();
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }, delay);
 }
 
 /** Always-visible persistent action buttons */
@@ -144,7 +154,10 @@ function renderPersistentButtons() {
   const mainBtn = document.createElement('button');
   mainBtn.textContent = '⌂ Main Menu';
   mainBtn.className = 'quick-reply';
-  mainBtn.addEventListener('click', () => handleAction('MAIN_MENU'));
+  mainBtn.addEventListener('click', () => {
+    appendMessage('⌂ Main Menu', 'user');
+    handleAction('MAIN_MENU');
+  });
   wrap.appendChild(mainBtn);
   followupsEl.appendChild(wrap);
 }
@@ -531,28 +544,54 @@ function handleAction(action, value) {
 }
 
 // ── Keyword Router ────────────────────────────────────────────────
+// Only intercept very short/simple messages. Longer questions and anything
+// that looks like a real question go straight to the OpenAI API so the
+// user gets a proper, informed answer instead of a hardcoded button menu.
 
-const keywordRoutes = [
-  { re: /^\s*(hi|hey|hello|salam|salaam|assalam|helo|sup|yo|hiya)\s*[!?.]?\s*$/i, action: 'MAIN_MENU' },
-  { re: /\b(seo|ranking|google|search engine)\b/i, action: 'EXPLORE_SEO' },
-  { re: /\b(shopify|shop|e-?commerce)\b/i,          action: 'EXPLORE_WEB' },
-  { re: /\b(website|web|wordpress|landing)\b/i,     action: 'EXPLORE_WEB' },
-  { re: /\b(content|social|instagram|posts|reels)\b/i, action: 'EXPLORE_CONTENT' },
-  { re: /\b(ad|ads|ppc|facebook|meta|tiktok)\b/i,   action: 'EXPLORE_SEO' },
-  { re: /\b(price|cost|rates|quote|kitna|rate)\b/i, action: 'GET_QUOTE' },
-  { re: /\b(portfolio|case study|results|clients|examples|proof)\b/i, action: 'SEE_WORK' },
-  { re: /\b(about|who are you|company|founder|kahan)\b/i, action: 'ABOUT' },
-  { re: /\b(human|agent|real person|baat karni)\b/i, action: 'TALK_TO_TEAM' },
-  { re: /\b(whatsapp|watsapp|whats app)\b/i,         action: 'TALK_TO_TEAM' },
-  { re: /\b(ai|automation|chatbot|bot)\b/i,          action: 'EXPLORE_AI' },
-  { re: /\b(email|newsletter|lifecycle)\b/i,         action: 'EXPLORE_EMAIL' },
-  { re: /\b(service|services|help|what do you do)\b/i, action: 'EXPLORE_SERVICES' }
+const GREETING_RE = /^\s*(hi|hey|hello|salam|salaam|assalam|helo|sup|yo|hiya|good morning|good evening|good afternoon)\s*[!?.,]*\s*$/i;
+
+// Words that indicate the user wants a real conversational answer, not a menu
+const QUESTION_WORDS_RE = /\b(what|how|why|when|where|which|who|explain|tell me|describe|can you|do you|is there|are there|difference|compare|help me|i want|i need|i'm looking|looking for|interested in|want to know|give me|show me|want|need)\b/i;
+
+// Simple direct-action keywords only for SHORT messages (≤ 4 words)
+const shortKeywordRoutes = [
+  { re: /\b(seo|ranking)\b/i,                                    action: 'EXPLORE_SEO' },
+  { re: /\b(shopify|e-?commerce|ecommerce)\b/i,                  action: 'EXPLORE_WEB' },
+  { re: /\b(website|wordpress)\b/i,                              action: 'EXPLORE_WEB' },
+  { re: /\b(content|social media|instagram|reels)\b/i,           action: 'EXPLORE_CONTENT' },
+  { re: /\b(ads|ppc|facebook|meta|tiktok|google ads)\b/i,        action: 'EXPLORE_SEO' },
+  { re: /\b(price|pricing|cost|quote|rates|kitna|rate|budget)\b/i, action: 'GET_QUOTE' },
+  { re: /\b(portfolio|our work|case study|examples|results)\b/i, action: 'SEE_WORK' },
+  { re: /\b(about|company|founder|who are you)\b/i,              action: 'ABOUT' },
+  { re: /\b(whatsapp|watsapp|human|agent|real person|call)\b/i,  action: 'TALK_TO_TEAM' },
+  { re: /\b(ai automation|chatbot|automation)\b/i,               action: 'EXPLORE_AI' },
+  { re: /\b(email marketing|newsletter|lifecycle)\b/i,           action: 'EXPLORE_EMAIL' },
+  { re: /\b(services|what do you do|how can you help)\b/i,       action: 'EXPLORE_SERVICES' }
 ];
 
 function routeByKeyword(text) {
-  for (const k of keywordRoutes) {
-    if (k.re.test(text)) { handleAction(k.action); return true; }
+  const trimmed = text.trim();
+
+  // Always handle pure greetings locally
+  if (GREETING_RE.test(trimmed)) {
+    handleAction('MAIN_MENU');
+    return true;
   }
+
+  // If the message is a real question or more than 4 words → let OpenAI answer
+  const wordCount = trimmed.split(/\s+/).length;
+  if (wordCount > 4 || QUESTION_WORDS_RE.test(trimmed)) {
+    return false;
+  }
+
+  // Short, non-question messages — try keyword routes
+  for (const k of shortKeywordRoutes) {
+    if (k.re.test(trimmed)) {
+      handleAction(k.action);
+      return true;
+    }
+  }
+
   return false;
 }
 

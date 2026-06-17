@@ -12,7 +12,11 @@ import { saveLead } from "./services/leads.js";
 
 const app = express();
 
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({ 
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false,
+  frameguard: false
+}));
 app.use(
   cors({
     origin: config.allowedOrigin === "*" ? true : config.allowedOrigin
