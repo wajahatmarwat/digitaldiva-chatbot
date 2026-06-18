@@ -8,7 +8,7 @@
   style.innerHTML = `
     #diva-chat-widget-btn {
       position: fixed;
-      bottom: 24px;
+      bottom: 90px;
       right: 24px;
       width: 60px;
       height: 60px;
@@ -16,7 +16,7 @@
       background: linear-gradient(135deg, #f0b429 0%, #d4a017 100%);
       box-shadow: 0 8px 24px rgba(240, 180, 41, 0.4);
       cursor: pointer;
-      z-index: 999999;
+      z-index: 2147483647;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -35,15 +35,15 @@
     }
     #diva-chat-widget-container {
       position: fixed;
-      bottom: 100px;
+      bottom: 165px;
       right: 24px;
       width: 420px;
       height: 700px;
-      max-height: calc(100vh - 120px);
+      max-height: calc(100vh - 180px);
       max-width: calc(100vw - 48px);
-      background: #05030e; /* Velvet Luxe background */
+      background: #05030e;
       border-radius: 24px;
-      z-index: 999999;
+      z-index: 2147483646;
       opacity: 0;
       pointer-events: none;
       transform: translateY(20px) scale(0.95);
