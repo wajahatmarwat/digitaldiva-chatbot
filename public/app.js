@@ -662,9 +662,16 @@ async function handleTypedLeadCapture(text) {
       leadDraftName = name;
       quoteState.awaitingContact = false;
       quoteState.awaitingEmail = false;
-      leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
-      appendMessage(`Thanks ${name} — I've added your email. Review the form on the right and submit when ready.`, 'bot');
-      document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      const isWidgetMode = window.location.search.includes('widget=true');
+      if (isWidgetMode) {
+        quoteState.awaitingCompany = true;
+        appendMessage(`Thanks ${name}! What's your company name or website?`, 'bot');
+      } else {
+        leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
+        appendMessage(`Thanks ${name} — I've added your email. Review the form on the right and submit when ready.`, 'bot');
+        document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       return true;
     }
     name = text.trim();
