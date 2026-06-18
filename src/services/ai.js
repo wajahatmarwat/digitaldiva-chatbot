@@ -33,38 +33,7 @@ function isAnsweringFollowup(message) {
 }
 
 function fallbackResponse(message, contextItems) {
-  const lower = message.toLowerCase();
-
-  if (
-    lower.includes("price") ||
-    lower.includes("pricing") ||
-    lower.includes("cost") ||
-    lower.includes("budget") ||
-    lower.includes("quote") ||
-    lower.includes("range")
-  ) {
-    const lines = contextItems
-      .map((item) => `${item.service}: ${item.startingRange}`)
-      .join("\n");
-
-    return `Here are approximate starting ranges:\n${lines}\n\nIf you share your goals and timeline, I can suggest the best-fit plan and arrange a consultation.`;
-  }
-
-  // If the top recommended service is one of our key services, provide a richer follow-up
-  if (contextItems.length > 0) {
-    const topService = contextItems[0].service.toLowerCase();
-    
-    // If user is answering a follow-up question (short, URL, yes/no, budget), move to lead form
-    if (isAnsweringFollowup(message)) {
-      return `Great! Thanks for that. Now I have a better idea of what you need.\n\nTo move forward, could you please submit your details (name, email, and a brief summary of your goals)? This will help us prepare a tailored proposal for you.\n\nYou can fill out the form below, and our team will reach out within 24 hours.`;
-    }
-
-    return generateServiceFollowup(topService, message, contextItems);
-  }
-
-  const suggested = contextItems.map((item) => item.service).join(", ");
-
-  return `Based on your query, I recommend exploring: ${suggested}. Tell me your business type, monthly marketing budget, and main goal so I can suggest the best next step.`;
+  return "Oops! I am currently running in 'Offline Mode' because my OpenAI API connection failed. Please check that your OPENAI_API_KEY in the `.env` file is valid and has active billing. Until then, I cannot answer questions naturally!";
 }
 
 function generateServiceFollowup(service, message, contextItems) {
