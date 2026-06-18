@@ -717,14 +717,21 @@ async function handleTypedLeadCapture(text) {
     if (text.trim().length >= 3) {
       leadFormEl.elements['goals'].value = text.trim();
       quoteState.awaitingGoals = false;
-      leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
-      appendMessage("I've added that to the form. Review and submit when ready!", 'bot');
-      showBotWithButtons('How would you like to continue?', [
-        { label: '💬 Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
-        { label: '📧 Fill lead form',       action: 'LEAD_EMAIL' },
-        { label: '📅 Book a call',          action: 'LEAD_BOOK' }
-      ]);
-      document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      const isWidgetMode = window.location.search.includes('widget=true');
+      if (isWidgetMode) {
+        appendMessage("Got it! Please review your details and confirm submission.", 'bot');
+        showReviewModal();
+      } else {
+        leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
+        appendMessage("I've added that to the form. Review and submit when ready!", 'bot');
+        showBotWithButtons('How would you like to continue?', [
+          { label: '💬 Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
+          { label: '📧 Fill lead form',       action: 'LEAD_EMAIL' },
+          { label: '📅 Book a call',          action: 'LEAD_BOOK' }
+        ]);
+        document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
       return true;
     } else {
       appendMessage('Please provide a short description of your goals (at least a sentence).', 'bot');
