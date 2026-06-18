@@ -463,21 +463,30 @@ function handleAction(action, value) {
         }
       }
       const anyPrefill = leadFormEl.elements['name'].value || leadFormEl.elements['email'].value || leadFormEl.elements['goals'].value.trim();
-      document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      if (anyPrefill) {
-        leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
-        showBotWithButtons("I've prefilled the form on the right. Review it and hit Submit when ready.", [
-          { label: '💬 WhatsApp instead', action: 'LEAD_WHATSAPP' },
-          { label: '📅 Book a Call',      action: 'LEAD_BOOK' }
-        ]);
+      
+      const isWidgetMode = window.location.search.includes('widget=true');
+      
+      if (isWidgetMode) {
+        quoteState.awaitingContact = true;
+        quoteState.awaitingEmail = false;
+        appendMessage("Sure! Please type your Name and Email address below so I can send your details to our team.", "bot");
       } else {
-        leadStatusEl.textContent = '';
-        showBotWithButtons('The lead form is on the right — fill in your details and submit when ready.', [
-          { label: '💬 WhatsApp instead', action: 'WHATSAPP' },
-          { label: '📅 Book a Call',      action: 'LEAD_BOOK' }
-        ]);
+        document.querySelector('.lead-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (anyPrefill) {
+          leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
+          showBotWithButtons("I've prefilled the form on the right. Review it and hit Submit when ready.", [
+            { label: '💬 WhatsApp instead', action: 'LEAD_WHATSAPP' },
+            { label: '📅 Book a Call',      action: 'LEAD_BOOK' }
+          ]);
+        } else {
+          leadStatusEl.textContent = '';
+          showBotWithButtons('The lead form is on the right — fill in your details and submit when ready.', [
+            { label: '💬 WhatsApp instead', action: 'WHATSAPP' },
+            { label: '📅 Book a Call',      action: 'LEAD_BOOK' }
+          ]);
+        }
+        quoteState.awaitingContact = true;
       }
-      quoteState.awaitingContact = true;
       quoteState.awaitingEmail = false;
       break;
 
