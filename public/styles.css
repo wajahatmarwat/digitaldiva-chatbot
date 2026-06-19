@@ -1122,27 +1122,25 @@ html.widget-mode .stars {
 
 html.widget-mode .app-layout {
   display: block;
-  padding: 0 !important;
+  /* Add padding so the inner chat card's drop shadow has room to render without getting clipped by the iframe */
+  padding: 20px !important;
   margin: 0 !important;
   height: 100%;
   overflow: hidden;
 }
 
 html.widget-mode .chat-panel {
-  /* Fill the iframe container, NOT the browser viewport */
+  /* Fill the padded container */
   height: 100% !important;
   min-height: 0 !important;
   overflow: hidden;
 }
 
 html.widget-mode .chat-card {
-  border-radius: 0;
-  border: none;
-  /* Fill the iframe container, NOT the browser viewport */
+  /* Retain native border-radius and shadow from base styling, just ensure it fills height */
   height: 100% !important;
   min-height: 0 !important;
   overflow: hidden;
-  box-shadow: none;
   display: flex;
   flex-direction: column;
 }

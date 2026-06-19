@@ -37,20 +37,17 @@
       position: fixed;
       bottom: 90px;
       right: 24px;
-      width: 420px;
-      /* Adapts to screen height: 75vh on short screens, max 680px on tall ones */
-      height: min(680px, 75vh);
+      /* Increased size to allow room for the chat card's drop shadow inside the iframe */
+      width: 440px;
+      height: min(700px, 80vh);
       max-width: calc(100vw - 48px);
-      background: #05030e;
-      border-radius: 24px;
+      background: transparent;
       z-index: 2147483646;
       opacity: 0;
       pointer-events: none;
       transform: translateY(20px) scale(0.95);
       transform-origin: bottom right;
       transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-      overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(200, 160, 255, 0.15);
     }
     #diva-chat-widget-container.diva-open {
       opacity: 1;
