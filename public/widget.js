@@ -37,9 +37,10 @@
       position: fixed;
       bottom: 90px;
       right: 24px;
-      /* Increased size to allow room for the chat card's drop shadow inside the iframe */
-      width: 440px;
-      height: min(700px, 80vh);
+      width: 420px;
+      /* Guaranteed to never touch top of screen (100vh - bottom offset - top gap) */
+      height: calc(100vh - 120px);
+      max-height: 680px;
       max-width: calc(100vw - 48px);
       background: transparent;
       z-index: 2147483646;
@@ -59,6 +60,15 @@
       height: 100%;
       border: none;
       background: transparent;
+    }
+    
+    /* Small/laptop screen scaling */
+    @media (max-height: 750px), (max-width: 1100px) {
+      #diva-chat-widget-container {
+        width: 380px;
+        bottom: 80px;
+        height: calc(100vh - 100px);
+      }
     }
     
     /* Tablet (481px – 900px width) — bottom sheet style */
