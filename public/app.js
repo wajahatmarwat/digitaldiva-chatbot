@@ -79,6 +79,19 @@ function getPackageSetDescription() {
 
 // ── UI Rendering ──────────────────────────────────────────────────
 
+/** Simple markdown formatter: **bold** and newlines → HTML */
+function formatMessage(text) {
+  // Escape any actual HTML first to prevent XSS
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  // Convert **bold** to <strong>
+  const bolded = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Convert newlines to <br>
+  return bolded.replace(/\n/g, '<br>');
+}
+
 /** Add a message bubble to the chat */
 function appendMessage(text, role) {
   // Remove any existing typing indicator
@@ -87,7 +100,8 @@ function appendMessage(text, role) {
 
   const div = document.createElement('div');
   div.className = `msg ${role}`;
-  div.textContent = text;
+  // Use innerHTML with safe formatter (escapes HTML, only converts markdown)
+  div.innerHTML = formatMessage(text);
   chatEl.appendChild(div);
   chatEl.scrollTop = chatEl.scrollHeight;
 }
