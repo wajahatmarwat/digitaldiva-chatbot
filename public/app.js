@@ -279,7 +279,7 @@ function handleAction(action, value) {
 
     case 'EXPLORE_SEO':
       showBotWithButtons(
-        "This is everything that gets your brand seen and brings the right people to your site:\n\nSEO — technical audits, on-page work, content that ranks\nPaid Ads (Google, Meta, TikTok) — targeting, creative testing, budget management\nAnalytics & Reporting — live dashboards, regular check-ins on what's working",
+        "Our Growth & Visibility team gets your brand seen by the right people:\n\nSEO — technical audits, on-page optimisation, content that ranks\nPaid Ads — Google, Meta, TikTok targeting & creative testing\nAnalytics — live dashboards and regular performance check-ins",
         [
           { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_SEO' },
           { label: 'See another category', action: 'EXPLORE_SERVICES' },
@@ -290,7 +290,7 @@ function handleAction(action, value) {
 
     case 'EXPLORE_CONTENT':
       showBotWithButtons(
-        "Our Content & Creative team produces everything from social posts to full campaigns:\n\nContent — blog, social, ad copy, scripts\nGraphic Design — social creatives, brand assets, presentation decks\nVideo — scripts, storyboards, edit briefs, subtitles\nBranding & Creative Strategy — brand identity, positioning, voice",
+        "Our Content & Creative team builds everything your brand needs to stand out:\n\nContent — blogs, social media copy, ad scripts\nGraphic Design — social creatives, brand assets, presentation decks\nVideo — scripts, storyboards, editing, subtitles\nBranding — visual identity, positioning, brand voice",
         [
           { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_CONTENT' },
           { label: 'See another category', action: 'EXPLORE_SERVICES' },
@@ -312,7 +312,7 @@ function handleAction(action, value) {
 
     case 'EXPLORE_EMAIL':
       showBotWithButtons(
-        "We help brands stay top-of-mind and turn one-time buyers into repeat customers:\n\nEmail Marketing — sequences, newsletters, automation\nLifecycle & retention campaigns\nOngoing account support for existing clients",
+        "Our Email & Retention team turns one-time visitors into loyal customers:\n\nEmail Marketing — welcome flows, newsletters, and automation\nRetention Strategy — lifecycle campaigns to boost repeat purchases\nAccount Management — ongoing support and optimisation",
         [
           { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_EMAIL' },
           { label: 'See another category', action: 'EXPLORE_SERVICES' },
