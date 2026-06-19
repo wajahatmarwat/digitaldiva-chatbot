@@ -76,7 +76,7 @@
         border-radius: 20px 20px 0 0;
       }
       #diva-chat-widget-btn {
-        bottom: 80px;
+        bottom: 160px;
         right: 16px;
         width: 54px;
         height: 54px;
@@ -94,7 +94,7 @@
         border-radius: 0;
       }
       #diva-chat-widget-btn {
-        bottom: 80px;
+        bottom: 160px;
         right: 16px;
         width: 52px;
         height: 52px;

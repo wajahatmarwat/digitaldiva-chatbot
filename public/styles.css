@@ -1128,3 +1128,23 @@ html.widget-mode .chat-card {
   height: 100vh;
   box-shadow: none;
 }
+
+/* -------- Mobile: prevent iOS auto-zoom on input focus -------- */
+/* iOS Safari zooms in if any input has font-size < 16px. Fix: force 16px on mobile */
+@media (max-width: 768px) {
+  .chat-input-area input {
+    font-size: 16px !important;
+  }
+
+  html.widget-mode .chat-card {
+    height: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+
+  html.widget-mode .chat-panel {
+    height: 100%;
+    overflow: hidden;
+  }
+}
