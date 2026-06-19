@@ -51,30 +51,63 @@ function getPackageSet() {
 
 function getPackageSetName() {
   const s = quoteState.packageSet || getPackageSet();
-  return s === 'A' ? 'Marketing Plan' : s === 'B' ? 'Full Marketing Plan' : 'Startup Bundle';
+  return s === 'A' ? 'Marketing Plan (PKR)' : s === 'B' ? 'Full Marketing Plan (USD)' : 'Startup Bundle';
 }
 
-function getDefaultTier() {
-  const s = quoteState.packageSet;
-  if (s === 'C') return 'Startup Bundle';
-  if (s === 'B') {
-    if (quoteState.answers.scope === 'full') return 'Premium Package';
-    if (['Established','E-commerce'].includes(quoteState.answers.stage)) return 'Growth Package';
-    return 'Starter Package';
-  }
+function showPackageOptions() {
+  const s = quoteState.packageSet || getPackageSet();
+  
   if (s === 'A') {
-    if (['Established','E-commerce'].includes(quoteState.answers.stage)) return 'Professional Package';
-    return 'Standard Package';
+    showBotWithButtons(
+      "Based on what you've told me, here's where most businesses like yours start:\n\n" +
+      "**Standard Package — PKR 50,000/month**\n" +
+      "2 social media platforms + website management. Strategy session, marketing plan, branding, graphic design, content creation (35 posts, video, GIFs), paid ads (10 campaigns + creatives), weekly reports, 2 strategy calls/month.\n\n" +
+      "**Professional Package — PKR 75,000/month**\n" +
+      "3 social media platforms + website management. Same core scope plus 45 posts, 15 ad campaigns + creatives, daily reports, weekly strategy calls.\n\n" +
+      "**Premium Package — PKR 100,000/month**\n" +
+      "5 social media platforms + website management. 60 posts, unlimited ad campaigns + creatives, daily reports, customised strategy call.\n\n" +
+      "Note: ad spend (paid promotion budget) is separate and not included in any tier.\n\nLet me know if one feels right, or if you'd like us to put a custom proposal together.",
+      [
+        { label: 'Standard sounds right — get a proposal', action: 'LEAD_OPTIONS' },
+        { label: 'Professional sounds right',              action: 'LEAD_OPTIONS' },
+        { label: 'Premium sounds right',                   action: 'LEAD_OPTIONS' },
+        { label: 'I need a custom quote',                  action: 'TALK_TO_TEAM' }
+      ]
+    );
+  } else if (s === 'B') {
+    const intlNote = quoteState.answers.scope === 'startup'
+      ? "For international clients we run this as part of one plan rather than splitting by channel — here's how that looks:\n\n"
+      : "";
+    showBotWithButtons(
+      intlNote +
+      "Based on what you've told me, here's where most businesses like yours start:\n\n" +
+      "**Starter Package — USD 200/month**\n" +
+      "2 platforms (Facebook, Instagram), 10 posts/month, engagement, hashtag strategy, basic monthly analytics, content calendar.\n\n" +
+      "**Growth Package — USD 500/month**\n" +
+      "3 platforms (Facebook, Instagram, LinkedIn or TikTok), 20 posts/month, 4 reels + 4 stories, community management, up to 2 ad campaigns, basic on-page SEO, 1 email campaign setup, monthly analytics report. Ad spend excluded.\n\n" +
+      "**Premium Package — USD 1,000/month**\n" +
+      "5 platforms (Facebook, Instagram, LinkedIn, TikTok, YouTube), 30 posts, 8 reels + 8 stories + 2 long-form videos, full community management, up to 5 ad campaigns, full SEO + blog strategy, 2 email campaigns/month, landing page design, monthly strategy call, detailed KPI tracking. Ad spend excluded.\n\nLet me know if one feels right, or if you'd like us to put a custom proposal together.",
+      [
+        { label: 'Starter sounds right — get a proposal', action: 'LEAD_OPTIONS' },
+        { label: 'Growth sounds right',                    action: 'LEAD_OPTIONS' },
+        { label: 'Premium sounds right',                   action: 'LEAD_OPTIONS' },
+        { label: 'I need a custom quote',                  action: 'TALK_TO_TEAM' }
+      ]
+    );
+  } else {
+    // Set C — Startup Bundle
+    showBotWithButtons(
+      "Based on what you've told me, here's the right starting point:\n\n" +
+      "**Startup Bundle — PKR 150,000/month**\n" +
+      "Built for brand-new businesses: a full website build, plus all core marketing services running alongside it — social media management, content & creative, paid ads management, and ongoing strategy — so the brand launches with its site and marketing moving together from day one.\n\n" +
+      "If you'd prefer to start with just one part (e.g. social only, no website yet), I can show you smaller options too.",
+      [
+        { label: 'This sounds right — get a proposal', action: 'LEAD_OPTIONS' },
+        { label: 'Show me smaller options instead',    action: 'QUOTE_ONE_FROM_STARTUP' },
+        { label: 'I need a custom quote',              action: 'TALK_TO_TEAM' }
+      ]
+    );
   }
-  return 'Starter Package';
-}
-
-function getPackageSetDescription() {
-  const s = quoteState.packageSet;
-  if (s === 'A') return 'For Pakistan-based clients, this Marketing Plan typically starts from PKR 80,000 per month and is customised to your scope.';
-  if (s === 'B') return 'For international or full-support marketing, this Full Marketing Plan usually begins around USD 1,000 per month.';
-  if (s === 'C') return 'The Startup Bundle typically starts near PKR 120,000 for launch and early growth support.';
-  return 'The exact quote will be confirmed after we review your goals.';
 }
 
 // ── UI Rendering ──────────────────────────────────────────────────
@@ -180,7 +213,7 @@ function renderPersistentButtons() {
 
 function showMainMenu() {
   showBotWithButtons(
-    "Hi! I'm Diva — your AI guide from Digital Diva. We help brands grow across Pakistan and internationally with data-driven marketing. How can I help you today?",
+    "Hi, I'm Diva 👋 from Digital Diva — we run marketing for brands across Pakistan and internationally. How can I help today?",
     [
       { label: 'Explore Services',   action: 'EXPLORE_SERVICES' },
       { label: 'Get a Quote',        action: 'GET_QUOTE' },
@@ -196,10 +229,11 @@ function showMainMenu() {
 function showBusinessStage(extraText = '') {
   let prompt = `${extraText}And which best describes your business right now?`;
   showBotWithButtons(prompt, [
-    { label: 'Startup / New business',    action: 'BUSINESS_STAGE', value: 'Startup' },
-    { label: 'Established / Growth',      action: 'BUSINESS_STAGE', value: 'Established' },
-    { label: 'E-commerce / Selling online', action: 'BUSINESS_STAGE', value: 'E-commerce' },
-    { label: 'Other',                     action: 'BUSINESS_STAGE', value: 'Other' }
+    { label: 'Startup / new brand',              action: 'BUSINESS_STAGE', value: 'Startup' },
+    { label: 'Growing SME',                      action: 'BUSINESS_STAGE', value: 'Growing SME' },
+    { label: 'Established business scaling up',  action: 'BUSINESS_STAGE', value: 'Established' },
+    { label: 'E-commerce store',                 action: 'BUSINESS_STAGE', value: 'E-commerce' },
+    { label: 'Agency / reseller',                action: 'BUSINESS_STAGE', value: 'Agency' }
   ]);
 }
 
@@ -208,10 +242,10 @@ function startQuoteFlow(prefill) {
   quoteState.step = 1;
   quoteState.answers = { category: prefill || '' };
   showBotWithButtons(
-    'Happy to help! Mind if I ask a couple of quick things first? It helps me point you to the right package — takes less than a minute.',
+    'Happy to help ✨ Mind if I ask a couple of quick things first? It\'ll help me point you to the right place — takes a minute.',
     [
-      { label: "Sure, let's go",     action: 'QUOTE_B1_SURE' },
-      { label: 'Just show me pricing', action: 'QUOTE_B1_PRICING' }
+      { label: "Sure, let's go",       action: 'QUOTE_B1_SURE' },
+      { label: 'Just give me pricing', action: 'QUOTE_B1_PRICING' }
     ]
   );
 }
@@ -234,22 +268,21 @@ function handleAction(action, value) {
       break;
 
     case 'EXPLORE_SERVICES':
-      showBotWithButtons('We cover everything your brand needs to grow online. What area interests you?', [
+      showBotWithButtons('Sure — here\'s what we work on. Tap a category and I\'ll give you a quick rundown:', [
         { label: 'Growth & Visibility (SEO/Ads)', action: 'EXPLORE_SEO' },
         { label: 'Content & Creative',            action: 'EXPLORE_CONTENT' },
         { label: 'Web & Shopify',                 action: 'EXPLORE_WEB' },
         { label: 'Email & Retention',             action: 'EXPLORE_EMAIL' },
-        { label: 'AI Automation',                 action: 'EXPLORE_AI' },
         { label: 'Show me everything',            action: 'EXPLORE_ALL' }
       ]);
       break;
 
     case 'EXPLORE_SEO':
       showBotWithButtons(
-        "Our Growth & Visibility team gets your brand seen by the right people:\n\n• SEO — technical audits, on-page optimisation, content that ranks\n• Paid Ads — Google, Meta, TikTok targeting & creative testing\n• Analytics — live dashboards and regular performance check-ins",
+        "This is everything that gets your brand seen and brings the right people to your site:\n\nSEO — technical audits, on-page work, content that ranks\nPaid Ads (Google, Meta, TikTok) — targeting, creative testing, budget management\nAnalytics & Reporting — live dashboards, regular check-ins on what's working",
         [
           { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_SEO' },
-          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'See another category', action: 'EXPLORE_SERVICES' },
           { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
@@ -257,10 +290,10 @@ function handleAction(action, value) {
 
     case 'EXPLORE_CONTENT':
       showBotWithButtons(
-        "Our Content & Creative team produces everything from social posts to full campaigns:\n\n• Content Marketing — blogs, copywriting, strategy\n• Graphic Design — brand identity, social creatives, ads\n• Video — reels, explainers, branded content",
+        "Our Content & Creative team produces everything from social posts to full campaigns:\n\nContent — blog, social, ad copy, scripts\nGraphic Design — social creatives, brand assets, presentation decks\nVideo — scripts, storyboards, edit briefs, subtitles\nBranding & Creative Strategy — brand identity, positioning, voice",
         [
           { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_CONTENT' },
-          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'See another category', action: 'EXPLORE_SERVICES' },
           { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
@@ -268,10 +301,10 @@ function handleAction(action, value) {
 
     case 'EXPLORE_WEB':
       showBotWithButtons(
-        "We design, build, and maintain websites and online stores:\n\n• WordPress — fast, conversion-focused websites\n• Shopify — product stores with built-in SEO\n• On-page optimisation from day one",
+        "We design, build and maintain websites and online stores — currently working in WordPress/Elementor and Shopify, with everything set up for clean structure and on-page SEO from day one:\n\nWebsite design & development (WordPress)\nShopify store setup, design & ongoing management\nLanding pages & funnels\nWebsite audits, speed & technical fixes",
         [
           { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_WEB' },
-          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'See another category', action: 'EXPLORE_SERVICES' },
           { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
@@ -279,10 +312,10 @@ function handleAction(action, value) {
 
     case 'EXPLORE_EMAIL':
       showBotWithButtons(
-        "We help brands stay top-of-mind and turn one-time buyers into repeat customers:\n\n• Email Marketing — campaigns, automations, list building\n• Lifecycle campaigns — nurture, retention, win-back flows",
+        "We help brands stay top-of-mind and turn one-time buyers into repeat customers:\n\nEmail Marketing — sequences, newsletters, automation\nLifecycle & retention campaigns\nOngoing account support for existing clients",
         [
           { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_EMAIL' },
-          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'See another category', action: 'EXPLORE_SERVICES' },
           { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
@@ -290,10 +323,10 @@ function handleAction(action, value) {
 
     case 'EXPLORE_AI':
       showBotWithButtons(
-        "AI Automation is one of our fastest-growing services:\n\n• WhatsApp & website chatbots that qualify leads 24/7\n• Automated follow-up sequences\n• AI-powered customer workflows\n• CRM & tool integrations",
+        "AI tools are built into how we work across every service — from research and strategy to reporting. It lets our teams move faster and stay sharper, while every strategy is still shaped by our specialists.\n\nIf you're looking for a specific AI product like a chatbot or automation workflow, we can build that too.",
         [
           { label: 'Get a quote for this', action: 'GET_QUOTE' },
-          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'See another category', action: 'EXPLORE_SERVICES' },
           { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
@@ -324,7 +357,7 @@ function handleAction(action, value) {
       quoteState.inProgress = true;
       quoteState.step = 2;
       quoteState.answers = { category: quoteState.answers.category || '' };
-      showBotWithButtons('First up — are you looking for help with one specific service, or broader ongoing marketing support?', [
+      showBotWithButtons('First up — are you looking for help with one specific thing, more general ongoing marketing support across the board, or are you a new business looking to get set up from scratch?', [
         { label: 'One specific service',                action: 'QUOTE_ONE' },
         { label: 'Full marketing support (everything)', action: 'QUOTE_FULL' },
         { label: "I'm a new business / startup",        action: 'QUOTE_STARTUP' },
@@ -340,44 +373,63 @@ function handleAction(action, value) {
         { label: 'SEO',                  action: 'QUOTE_SERVICE', value: 'SEO' },
         { label: 'Paid Ads',             action: 'QUOTE_SERVICE', value: 'Paid Ads' },
         { label: 'Content & Social',     action: 'QUOTE_SERVICE', value: 'Content & Social' },
-        { label: 'Website (WordPress)', action: 'QUOTE_SERVICE', value: 'Website' },
+        { label: 'Website (WordPress)',  action: 'QUOTE_SERVICE', value: 'Website' },
         { label: 'Shopify Store',        action: 'QUOTE_SERVICE', value: 'Shopify' },
         { label: 'Email Marketing',      action: 'QUOTE_SERVICE', value: 'Email' },
-        { label: 'AI Automation',        action: 'QUOTE_SERVICE', value: 'AI Automation' }
+        { label: 'Something else',       action: 'QUOTE_SERVICE', value: 'Other' }
       ]);
       break;
 
     case 'QUOTE_ONE':
       quoteState.answers.scope = 'one';
       quoteState.step = 3;
-      showBotWithButtons('Which service?', [
-        { label: 'SEO',              action: 'QUOTE_SERVICE', value: 'SEO' },
-        { label: 'Paid Ads',         action: 'QUOTE_SERVICE', value: 'Paid Ads' },
-        { label: 'Content & Social', action: 'QUOTE_SERVICE', value: 'Content & Social' },
-        { label: 'Website',          action: 'QUOTE_SERVICE', value: 'Website' },
-        { label: 'Shopify Store',    action: 'QUOTE_SERVICE', value: 'Shopify' },
-        { label: 'Email Marketing',  action: 'QUOTE_SERVICE', value: 'Email' },
-        { label: 'AI Automation',    action: 'QUOTE_SERVICE', value: 'AI Automation' },
-        { label: 'Something else',   action: 'QUOTE_SERVICE', value: 'Other' }
-      ]);
+      if (quoteState.answers.category) {
+        // Pre-filled from Branch A — skip service picker, go to business stage
+        quoteState.answers.service = quoteState.answers.category;
+        showBusinessStage();
+      } else {
+        showBotWithButtons('Got it — which one are you thinking about?', [
+          { label: 'SEO',              action: 'QUOTE_SERVICE', value: 'SEO' },
+          { label: 'Paid Ads',         action: 'QUOTE_SERVICE', value: 'Paid Ads' },
+          { label: 'Content & Social', action: 'QUOTE_SERVICE', value: 'Content & Social' },
+          { label: 'Website',          action: 'QUOTE_SERVICE', value: 'Website' },
+          { label: 'Shopify Store',    action: 'QUOTE_SERVICE', value: 'Shopify' },
+          { label: 'Email Marketing',  action: 'QUOTE_SERVICE', value: 'Email' },
+          { label: 'Something else',   action: 'QUOTE_SERVICE', value: 'Other' }
+        ]);
+      }
       break;
 
     case 'QUOTE_FULL':
       quoteState.answers.scope = 'full';
       quoteState.step = 4;
-      showBusinessStage("That's our favourite kind of project — we can plan everything together. ");
+      showBusinessStage("That's usually our favourite kind of project — it means we can plan everything together instead of working around gaps. ");
       break;
 
     case 'QUOTE_STARTUP':
+      // New business / startup goes straight to timeline (stage is implied), then Set C
       quoteState.answers.scope = 'startup';
-      quoteState.step = 4;
-      showBusinessStage();
+      quoteState.answers.stage = 'Startup';
+      quoteState.step = 5;
+      showBotWithButtons('Last one — when are you hoping to get started?', [
+        { label: 'Right away',             action: 'TIMELINE', value: 'Right away' },
+        { label: 'Within a month',         action: 'TIMELINE', value: 'Within a month' },
+        { label: 'Just exploring options', action: 'TIMELINE', value: 'Exploring' }
+      ]);
       break;
 
     case 'QUOTE_NOT_SURE':
       quoteState.answers.scope = 'not_sure';
       quoteState.step = 4;
+      appendMessage("No worries — that's a normal place to start. Let's narrow it down.", 'bot');
       showBusinessStage();
+      break;
+
+    case 'QUOTE_ONE_FROM_STARTUP':
+      // Startup visitor wants smaller options — switch to Set A
+      quoteState.answers.scope = 'one';
+      quoteState.packageSet = quoteState.region === 'international' ? 'B' : 'A';
+      showPackageOptions();
       break;
 
     case 'QUOTE_SERVICE':
@@ -406,13 +458,15 @@ function handleAction(action, value) {
       quoteState.step = 5;
       let extra = '';
       if (quoteState.answers.service === 'SEO' && value === 'Startup') {
-        extra = "For brand-new sites, we usually pair SEO with a quick technical check first so nothing holds the site back before we start building rankings.\n\n";
+        extra = "Heads up — for brand-new sites, we usually pair SEO with a quick technical check first, so nothing's holding the site back before we start building rankings.\n\n";
       } else if (quoteState.answers.service === 'Shopify' && value === 'E-commerce') {
-        extra = "If you're already selling, a quick look at your store setup alongside ads can make paid traffic convert much better.\n\n";
+        extra = "If you're already selling, it's often worth a quick look at your store setup alongside ads — a few small fixes can make paid traffic convert a lot better.\n\n";
+      } else if (quoteState.answers.service === 'Content & Social' && value === 'Startup') {
+        extra = "For new brands, we typically start with a short content plan before posting — so everything ties back to one direction instead of one-off posts.\n\n";
       }
       showBotWithButtons(`${extra}Last one — when are you hoping to get started?`, [
-        { label: 'Right away',         action: 'TIMELINE', value: 'Right away' },
-        { label: 'Within a month',     action: 'TIMELINE', value: 'Within a month' },
+        { label: 'Right away',             action: 'TIMELINE', value: 'Right away' },
+        { label: 'Within a month',         action: 'TIMELINE', value: 'Within a month' },
         { label: 'Just exploring options', action: 'TIMELINE', value: 'Exploring' }
       ]);
       break;
@@ -421,23 +475,14 @@ function handleAction(action, value) {
       quoteState.answers.timeline = value;
       quoteState.step = 6;
       quoteState.packageSet = getPackageSet();
-      const setName = getPackageSetName();
-      const packageText = getPackageSetDescription();
-      showBotWithButtons(
-        `Here's what this usually maps to: **${setName}**\n\n${packageText}\n\nThe team will confirm exact numbers after a quick review of your goals.`,
-        [
-          { label: 'Tell me more',     action: 'PACKAGE_TELL_MORE' },
-          { label: 'Custom quote',     action: 'TALK_TO_TEAM' },
-          { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
-        ]
-      );
+      showPackageOptions();
       break;
 
     case 'PACKAGE_TELL_MORE':
       showBotWithButtons(
         'Our packages scale with your scope. The team confirms the right starting point after reviewing your goals. Ready to connect?',
         [
-          { label: 'Contact options', action: 'LEAD_OPTIONS' },
+          { label: 'Get a proposal',  action: 'LEAD_OPTIONS' },
           { label: 'Talk to Team',    action: 'TALK_TO_TEAM' },
           { label: 'Main Menu',       action: 'MAIN_MENU' }
         ]
@@ -534,22 +579,78 @@ function handleAction(action, value) {
 
     case 'SEE_WORK':
       showBotWithButtons(
-        "We've delivered 300+ projects — websites, paid ad campaigns, social content, and conversion-focused design — for brands across Pakistan, UAE, USA, UK, and more.",
+        "We've completed 200+ projects for 50+ brands across 10+ countries — from FMCG and e-commerce to healthcare and fashion. What would help you most right now?",
         [
-          { label: 'View Portfolio', action: 'OPEN_URL', value: 'https://digitaldivapro.com/portfolio' },
-          { label: 'Get a Quote',    action: 'GET_QUOTE' },
-          { label: 'Talk to Team',   action: 'TALK_TO_TEAM' }
+          { label: 'Show me case studies / portfolio',      action: 'SEE_WORK_PORTFOLIO' },
+          { label: 'What industries do you work with?',     action: 'SEE_WORK_INDUSTRIES' },
+          { label: 'I\'d like to speak to the team',        action: 'TALK_TO_TEAM' }
+        ]
+      );
+      break;
+
+    case 'SEE_WORK_PORTFOLIO':
+      showBotWithButtons(
+        "Our portfolio page has the full picture, with examples across industries and markets.",
+        [
+          { label: 'Open Portfolio Page', action: 'OPEN_URL', value: 'https://digitaldivapro.com/portfolio' },
+          { label: 'Talk to the Team',    action: 'TALK_TO_TEAM' },
+          { label: 'Main Menu',           action: 'MAIN_MENU' }
+        ]
+      );
+      break;
+
+    case 'SEE_WORK_INDUSTRIES':
+      showBotWithButtons(
+        "We've run campaigns across FMCG & beverages, e-commerce & fashion, healthcare, B2B manufacturing, and more — for clients based in Pakistan and internationally. Whatever your industry, we can adapt to it.",
+        [
+          { label: 'Get a Quote',      action: 'GET_QUOTE' },
+          { label: 'Talk to the Team', action: 'TALK_TO_TEAM' },
+          { label: 'Main Menu',        action: 'MAIN_MENU' }
         ]
       );
       break;
 
     case 'ABOUT':
       showBotWithButtons(
-        "Digital Diva is a results-driven, AI-first digital marketing agency founded by Zil-e-Huma. We operate globally — Pakistan, USA, Canada, UAE, UK, KSA, Australia and beyond.\n\nWe help businesses grow using smart strategies, high-quality content, and AI-powered solutions.",
+        "Digital Diva is a full-service digital marketing agency, founded in 2020 by Zil-e-Huma. We work as a set of specialist teams — one for every part of marketing — and we've delivered 200+ projects for 50+ brands across 10+ countries.",
         [
-          { label: 'See Our Work',   action: 'SEE_WORK' },
-          { label: 'Get a Quote',    action: 'GET_QUOTE' },
-          { label: 'Talk to Team',   action: 'TALK_TO_TEAM' }
+          { label: 'What makes you different?',                  action: 'ABOUT_DIFF' },
+          { label: 'Where are you based / who can you work with?', action: 'ABOUT_BASED' },
+          { label: 'Get a Quote',                                action: 'GET_QUOTE' },
+          { label: 'Main Menu',                                  action: 'MAIN_MENU' }
+        ]
+      );
+      break;
+
+    case 'ABOUT_DIFF':
+      showBotWithButtons(
+        "A couple of things: we use AI tools across our process to work faster and stay sharp — from research to reporting — but every strategy and piece of work is shaped by our specialists, not handed off to a machine. And because we're set up as full teams (SEO, ads, content, design, web, analytics and more), you get a group working together for you, not one generalist juggling everything.",
+        [
+          { label: 'Tell me about your team', action: 'ABOUT_TEAM' },
+          { label: 'Get a Quote',             action: 'GET_QUOTE' },
+          { label: 'Main Menu',               action: 'MAIN_MENU' }
+        ]
+      );
+      break;
+
+    case 'ABOUT_TEAM':
+      showBotWithButtons(
+        "We're organised into specialist teams — Strategy, SEO, Ads, Content, Design, Video, Web & Shopify, Branding, Analytics, Email & Lifecycle, Client Success and more — all working together so nothing falls through the cracks.",
+        [
+          { label: 'Get a Quote',      action: 'GET_QUOTE' },
+          { label: 'Talk to the Team', action: 'TALK_TO_TEAM' },
+          { label: 'Main Menu',        action: 'MAIN_MENU' }
+        ]
+      );
+      break;
+
+    case 'ABOUT_BASED':
+      showBotWithButtons(
+        "We're proudly Pakistan-based and work with local brands across the country — and we also work with clients internationally, fully remote. Wherever you're reaching out from, we can work with you.",
+        [
+          { label: 'Get a Quote',      action: 'GET_QUOTE' },
+          { label: 'Talk to the Team', action: 'TALK_TO_TEAM' },
+          { label: 'Main Menu',        action: 'MAIN_MENU' }
         ]
       );
       break;
