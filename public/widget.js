@@ -35,11 +35,11 @@
     }
     #diva-chat-widget-container {
       position: fixed;
-      bottom: 100px;
+      bottom: 90px;
       right: 24px;
       width: 420px;
-      height: 680px;
-      max-height: calc(100vh - 110px);
+      /* Adapts to screen height: 75vh on short screens, max 680px on tall ones */
+      height: min(680px, 75vh);
       max-width: calc(100vw - 48px);
       background: #05030e;
       border-radius: 24px;
