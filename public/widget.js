@@ -64,7 +64,7 @@
       background: transparent;
     }
     
-    /* Tablet (481px – 900px width) */
+    /* Tablet (481px – 900px width) — bottom sheet style */
     @media (max-width: 900px) {
       #diva-chat-widget-container {
         bottom: 0;
@@ -98,22 +98,6 @@
         right: 16px;
         width: 52px;
         height: 52px;
-      }
-    }
-    /* Short viewport (any width, height < 650px) — slide up from bottom */
-    @media (max-height: 650px) {
-      #diva-chat-widget-container {
-        bottom: 0;
-        right: 0;
-        width: 100vw;
-        height: 100vh;
-        max-height: 100vh;
-        max-width: 100vw;
-        border-radius: 0;
-      }
-      #diva-chat-widget-btn {
-        bottom: 90px;
-        right: 20px;
       }
     }
   `;
