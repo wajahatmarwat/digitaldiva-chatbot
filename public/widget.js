@@ -72,6 +72,7 @@
     }
     
     /* Tablet (481px – 900px width) — bottom sheet style */
+    /* Tablet (481px – 900px width) — bottom sheet style */
     @media (max-width: 900px) {
       #diva-chat-widget-container {
         bottom: 0;
@@ -87,6 +88,14 @@
         right: 16px;
         width: 54px;
         height: 54px;
+      }
+      /* Move X button out of the way when chat is open! */
+      #diva-chat-widget-btn.diva-open {
+        top: 20px;
+        bottom: auto;
+        right: 16px;
+        width: 44px;
+        height: 44px;
       }
     }
     /* Phone (up to 480px) — full screen */
@@ -105,6 +114,13 @@
         right: 16px;
         width: 52px;
         height: 52px;
+      }
+      #diva-chat-widget-btn.diva-open {
+        top: 20px;
+        bottom: auto;
+        right: 16px;
+        width: 44px;
+        height: 44px;
       }
     }
   `;
@@ -144,9 +160,11 @@
     isOpen = !isOpen;
     if (isOpen) {
       container.classList.add('diva-open');
+      btn.classList.add('diva-open');
       btn.innerHTML = closeIcon;
     } else {
       container.classList.remove('diva-open');
+      btn.classList.remove('diva-open');
       btn.innerHTML = chatIcon;
     }
   });
