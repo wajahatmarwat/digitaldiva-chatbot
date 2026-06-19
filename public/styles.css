@@ -1159,26 +1159,42 @@ html.widget-mode .chat-input-area {
 html.widget-mode .followups-wrap {
   flex: 0 0 auto;
   padding: 10px 12px 10px;
-}
-
-/* Make buttons horizontally scrollable instead of wrapping to save massive vertical space */
-html.widget-mode .followups-row {
+  /* Make the wrapper the scroll container */
   display: flex;
+  flex-direction: row;
   flex-wrap: nowrap;
   overflow-x: auto;
   gap: 8px;
-  padding-bottom: 2px;
-  /* Hide scrollbar for clean UI, but keep it scrollable */
   scrollbar-width: none; 
 }
-html.widget-mode .followups-row::-webkit-scrollbar {
+html.widget-mode .followups-wrap::-webkit-scrollbar {
   display: none;
 }
 
+/* Flatten the inner containers so all buttons sit in one single scrolling row */
+html.widget-mode .followups-row,
+html.widget-mode .persistent-actions {
+  display: contents;
+}
+
+/* Scale down UI globally in widget mode so it doesn't look huge on scaled screens */
+html.widget-mode .chat-topbar { padding: 10px 14px; }
+html.widget-mode .agent-avatar { width: 34px; height: 34px; font-size: 14px; }
+html.widget-mode .agent-name { font-size: 13px; }
+html.widget-mode .agent-status { font-size: 11px; }
+html.widget-mode .btn-ghost { font-size: 11px; padding: 6px 12px; }
+
+html.widget-mode .msg { font-size: 13px; padding: 9px 13px; }
+html.widget-mode .chat-messages { padding: 16px 14px 10px; gap: 10px; }
+
+html.widget-mode .chat-input-area { padding: 10px 14px 12px; }
+html.widget-mode .chat-input-area input { font-size: 13px; padding: 10px 14px; }
+html.widget-mode .send-btn { width: 38px; height: 38px; }
+
 html.widget-mode .quick-reply {
-  font-size: 13px;
-  padding: 7px 14px;
-  flex-shrink: 0; /* ensure text isn't squished */
+  font-size: 12px;
+  padding: 6px 12px;
+  flex-shrink: 0; 
 }
 /* -------- Mobile: prevent iOS auto-zoom on input focus -------- */
 /* iOS Safari zooms in if any input has font-size < 16px. Fix: force 16px on mobile */
