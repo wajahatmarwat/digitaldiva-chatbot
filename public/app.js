@@ -152,10 +152,10 @@ function renderPersistentButtons() {
   const wrap = document.createElement('div');
   wrap.className = 'persistent-actions';
   const mainBtn = document.createElement('button');
-  mainBtn.textContent = '⌂ Main Menu';
+  mainBtn.textContent = 'Main Menu';
   mainBtn.className = 'quick-reply';
   mainBtn.addEventListener('click', () => {
-    appendMessage('⌂ Main Menu', 'user');
+    appendMessage('Main Menu', 'user');
     handleAction('MAIN_MENU');
   });
   wrap.appendChild(mainBtn);
@@ -166,13 +166,13 @@ function renderPersistentButtons() {
 
 function showMainMenu() {
   showBotWithButtons(
-    "Hi! I'm Diva 👋 — your AI guide from Digital Diva. We help brands grow across Pakistan and internationally with data-driven marketing. How can I help you today?",
+    "Hi! I'm Diva — your AI guide from Digital Diva. We help brands grow across Pakistan and internationally with data-driven marketing. How can I help you today?",
     [
-      { label: '🚀 Explore Services',    action: 'EXPLORE_SERVICES' },
-      { label: '💬 Get a Quote',         action: 'GET_QUOTE' },
-      { label: '📂 See Our Work',        action: 'SEE_WORK' },
-      { label: '🏢 About Digital Diva',  action: 'ABOUT' },
-      { label: '📞 Talk to the Team',    action: 'TALK_TO_TEAM' }
+      { label: 'Explore Services',   action: 'EXPLORE_SERVICES' },
+      { label: 'Get a Quote',        action: 'GET_QUOTE' },
+      { label: 'See Our Work',       action: 'SEE_WORK' },
+      { label: 'About Digital Diva', action: 'ABOUT' },
+      { label: 'Talk to the Team',   action: 'TALK_TO_TEAM' }
     ]
   );
 }
@@ -182,10 +182,10 @@ function showMainMenu() {
 function showBusinessStage(extraText = '') {
   let prompt = `${extraText}And which best describes your business right now?`;
   showBotWithButtons(prompt, [
-    { label: '🌱 Startup / New business',     action: 'BUSINESS_STAGE', value: 'Startup' },
-    { label: '📈 Established / Growth',        action: 'BUSINESS_STAGE', value: 'Established' },
-    { label: '🛒 E-commerce / Selling online', action: 'BUSINESS_STAGE', value: 'E-commerce' },
-    { label: '🔍 Other',                       action: 'BUSINESS_STAGE', value: 'Other' }
+    { label: 'Startup / New business',    action: 'BUSINESS_STAGE', value: 'Startup' },
+    { label: 'Established / Growth',      action: 'BUSINESS_STAGE', value: 'Established' },
+    { label: 'E-commerce / Selling online', action: 'BUSINESS_STAGE', value: 'E-commerce' },
+    { label: 'Other',                     action: 'BUSINESS_STAGE', value: 'Other' }
   ]);
 }
 
@@ -194,9 +194,9 @@ function startQuoteFlow(prefill) {
   quoteState.step = 1;
   quoteState.answers = { category: prefill || '' };
   showBotWithButtons(
-    'Happy to help 🌟 Mind if I ask a couple of quick things first? It helps me point you to the right package — takes less than a minute.',
+    'Happy to help! Mind if I ask a couple of quick things first? It helps me point you to the right package — takes less than a minute.',
     [
-      { label: "Sure, let's go 👉",   action: 'QUOTE_B1_SURE' },
+      { label: "Sure, let's go",     action: 'QUOTE_B1_SURE' },
       { label: 'Just show me pricing', action: 'QUOTE_B1_PRICING' }
     ]
   );
@@ -213,20 +213,20 @@ function handleAction(action, value) {
 
     case 'TALK_TO_TEAM':
       showBotWithButtons('Of course — here are the best ways to reach us directly:', [
-        { label: '💬 WhatsApp Us', action: 'WHATSAPP' },
-        { label: '📧 Email / Lead Form', action: 'EMAIL' },
-        { label: '📅 Book a Call', action: 'BOOK' }
+        { label: 'WhatsApp Us',     action: 'WHATSAPP' },
+        { label: 'Email / Lead Form', action: 'EMAIL' },
+        { label: 'Book a Call',     action: 'BOOK' }
       ]);
       break;
 
     case 'EXPLORE_SERVICES':
       showBotWithButtons('We cover everything your brand needs to grow online. What area interests you?', [
-        { label: '📈 Growth & Visibility (SEO/Ads)',  action: 'EXPLORE_SEO' },
-        { label: '✍️ Content & Creative',             action: 'EXPLORE_CONTENT' },
-        { label: '🌐 Web & Shopify',                  action: 'EXPLORE_WEB' },
-        { label: '📧 Email & Retention',              action: 'EXPLORE_EMAIL' },
-        { label: '🤖 AI Automation',                  action: 'EXPLORE_AI' },
-        { label: '📋 Show me everything',             action: 'EXPLORE_ALL' }
+        { label: 'Growth & Visibility (SEO/Ads)', action: 'EXPLORE_SEO' },
+        { label: 'Content & Creative',            action: 'EXPLORE_CONTENT' },
+        { label: 'Web & Shopify',                 action: 'EXPLORE_WEB' },
+        { label: 'Email & Retention',             action: 'EXPLORE_EMAIL' },
+        { label: 'AI Automation',                 action: 'EXPLORE_AI' },
+        { label: 'Show me everything',            action: 'EXPLORE_ALL' }
       ]);
       break;
 
@@ -234,9 +234,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         "Our Growth & Visibility team gets your brand seen by the right people:\n\n• SEO — technical audits, on-page optimisation, content that ranks\n• Paid Ads — Google, Meta, TikTok targeting & creative testing\n• Analytics — live dashboards and regular performance check-ins",
         [
-          { label: '💰 Get a quote for this', action: 'GET_QUOTE_FOR_SEO' },
-          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
-          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+          { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_SEO' },
+          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
       break;
@@ -245,9 +245,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         "Our Content & Creative team produces everything from social posts to full campaigns:\n\n• Content Marketing — blogs, copywriting, strategy\n• Graphic Design — brand identity, social creatives, ads\n• Video — reels, explainers, branded content",
         [
-          { label: '💰 Get a quote for this', action: 'GET_QUOTE_FOR_CONTENT' },
-          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
-          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+          { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_CONTENT' },
+          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
       break;
@@ -256,9 +256,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         "We design, build, and maintain websites and online stores:\n\n• WordPress — fast, conversion-focused websites\n• Shopify — product stores with built-in SEO\n• On-page optimisation from day one",
         [
-          { label: '💰 Get a quote for this', action: 'GET_QUOTE_FOR_WEB' },
-          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
-          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+          { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_WEB' },
+          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
       break;
@@ -267,9 +267,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         "We help brands stay top-of-mind and turn one-time buyers into repeat customers:\n\n• Email Marketing — campaigns, automations, list building\n• Lifecycle campaigns — nurture, retention, win-back flows",
         [
-          { label: '💰 Get a quote for this', action: 'GET_QUOTE_FOR_EMAIL' },
-          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
-          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+          { label: 'Get a quote for this', action: 'GET_QUOTE_FOR_EMAIL' },
+          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
       break;
@@ -278,9 +278,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         "AI Automation is one of our fastest-growing services:\n\n• WhatsApp & website chatbots that qualify leads 24/7\n• Automated follow-up sequences\n• AI-powered customer workflows\n• CRM & tool integrations",
         [
-          { label: '💰 Get a quote for this', action: 'GET_QUOTE' },
-          { label: '🔙 See another service',  action: 'EXPLORE_SERVICES' },
-          { label: '📞 Talk to the Team',     action: 'TALK_TO_TEAM' }
+          { label: 'Get a quote for this', action: 'GET_QUOTE' },
+          { label: 'See another service',  action: 'EXPLORE_SERVICES' },
+          { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
         ]
       );
       break;
@@ -289,8 +289,8 @@ function handleAction(action, value) {
       showBotWithButtons(
         "Here's the full picture of what we do:\n\nSEO · Paid Ads · Social Media · Content Marketing · Email Marketing · Web Development · Shopify · Graphic Design · Video Production · Branding · AI Automation · Analytics & Strategy",
         [
-          { label: '💰 Get a quote', action: 'GET_QUOTE' },
-          { label: '📞 Talk to the Team', action: 'TALK_TO_TEAM' }
+          { label: 'Get a quote', action: 'GET_QUOTE' },
+          { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
         ]
       );
       break;
@@ -372,8 +372,8 @@ function handleAction(action, value) {
         quoteState.answers.scope = 'one';
         quoteState.step = 3;
         showBotWithButtons('Are you based in Pakistan, or is this an international project?', [
-          { label: '🇵🇰 Pakistan / PKR',       action: 'QUOTE_REGION', value: 'pakistan' },
-          { label: '🌍 International / USD',    action: 'QUOTE_REGION', value: 'international' }
+          { label: 'Pakistan / PKR',      action: 'QUOTE_REGION', value: 'pakistan' },
+          { label: 'International / USD', action: 'QUOTE_REGION', value: 'international' }
         ]);
         return;
       }
@@ -397,9 +397,9 @@ function handleAction(action, value) {
         extra = "If you're already selling, a quick look at your store setup alongside ads can make paid traffic convert much better.\n\n";
       }
       showBotWithButtons(`${extra}Last one — when are you hoping to get started?`, [
-        { label: '⚡ Right away',           action: 'TIMELINE', value: 'Right away' },
-        { label: '📅 Within a month',       action: 'TIMELINE', value: 'Within a month' },
-        { label: '🔍 Just exploring options', action: 'TIMELINE', value: 'Exploring' }
+        { label: 'Right away',         action: 'TIMELINE', value: 'Right away' },
+        { label: 'Within a month',     action: 'TIMELINE', value: 'Within a month' },
+        { label: 'Just exploring options', action: 'TIMELINE', value: 'Exploring' }
       ]);
       break;
 
@@ -412,9 +412,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         `Here's what this usually maps to: **${setName}**\n\n${packageText}\n\nThe team will confirm exact numbers after a quick review of your goals.`,
         [
-          { label: '📋 Tell me more',         action: 'PACKAGE_TELL_MORE' },
-          { label: '📝 Custom quote',          action: 'TALK_TO_TEAM' },
-          { label: '📞 Talk to the Team',      action: 'TALK_TO_TEAM' }
+          { label: 'Tell me more',     action: 'PACKAGE_TELL_MORE' },
+          { label: 'Custom quote',     action: 'TALK_TO_TEAM' },
+          { label: 'Talk to the Team', action: 'TALK_TO_TEAM' }
         ]
       );
       break;
@@ -423,9 +423,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         'Our packages scale with your scope. The team confirms the right starting point after reviewing your goals. Ready to connect?',
         [
-          { label: '📞 Contact options', action: 'LEAD_OPTIONS' },
-          { label: '📞 Talk to Team',    action: 'TALK_TO_TEAM' },
-          { label: '⌂ Main Menu',        action: 'MAIN_MENU' }
+          { label: 'Contact options', action: 'LEAD_OPTIONS' },
+          { label: 'Talk to Team',    action: 'TALK_TO_TEAM' },
+          { label: 'Main Menu',       action: 'MAIN_MENU' }
         ]
       );
       break;
@@ -434,9 +434,9 @@ function handleAction(action, value) {
       quoteState.awaitingContact = true;
       quoteState.awaitingEmail = false;
       showBotWithButtons('Great — how would you like to continue?', [
-        { label: '💬 Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
-        { label: '📧 Fill lead form',       action: 'LEAD_EMAIL' },
-        { label: '📅 Book a call directly', action: 'LEAD_BOOK' }
+        { label: 'Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
+        { label: 'Fill lead form',       action: 'LEAD_EMAIL' },
+        { label: 'Book a call directly', action: 'LEAD_BOOK' }
       ]);
       break;
 
@@ -444,9 +444,9 @@ function handleAction(action, value) {
       const pre = `Hi Digital Diva! I came from your website chat — I'm interested in ${quoteState.answers.service || 'your marketing services'} for my ${quoteState.answers.stage || 'business'}.`;
       const url = buildWhatsAppUrl(pre);
       showBotWithButtons('Tap below to open WhatsApp with your message pre-filled.', [
-        { label: '💬 Open WhatsApp Chat', action: 'OPEN_URL', value: url },
-        { label: '📧 Email Us Instead',   action: 'LEAD_EMAIL' },
-        { label: '📅 Book a Call',        action: 'LEAD_BOOK' }
+        { label: 'Open WhatsApp Chat', action: 'OPEN_URL', value: url },
+        { label: 'Email Us Instead',   action: 'LEAD_EMAIL' },
+        { label: 'Book a Call',        action: 'LEAD_BOOK' }
       ]);
       quoteState.awaitingContact = false;
       quoteState.awaitingEmail = false;
@@ -475,14 +475,14 @@ function handleAction(action, value) {
         if (anyPrefill) {
           leadStatusEl.textContent = '✓ Prefilled from chat — review and submit.';
           showBotWithButtons("I've prefilled the form on the right. Review it and hit Submit when ready.", [
-            { label: '💬 WhatsApp instead', action: 'LEAD_WHATSAPP' },
-            { label: '📅 Book a Call',      action: 'LEAD_BOOK' }
+            { label: 'WhatsApp instead', action: 'LEAD_WHATSAPP' },
+            { label: 'Book a Call',      action: 'LEAD_BOOK' }
           ]);
         } else {
           leadStatusEl.textContent = '';
           showBotWithButtons('The lead form is on the right — fill in your details and submit when ready.', [
-            { label: '💬 WhatsApp instead', action: 'WHATSAPP' },
-            { label: '📅 Book a Call',      action: 'LEAD_BOOK' }
+            { label: 'WhatsApp instead', action: 'WHATSAPP' },
+            { label: 'Book a Call',      action: 'LEAD_BOOK' }
           ]);
         }
         quoteState.awaitingContact = true;
@@ -492,25 +492,25 @@ function handleAction(action, value) {
 
     case 'LEAD_BOOK':
       showBotWithButtons("I can open our booking calendar — pick a time and we'll join ready.", [
-        { label: '📅 Open Booking Calendar', action: 'OPEN_URL', value: 'https://calendly.com/' },
-        { label: '💬 WhatsApp Us',           action: 'LEAD_WHATSAPP' },
-        { label: '📧 Email / Lead Form',     action: 'LEAD_EMAIL' }
+        { label: 'Open Booking Calendar', action: 'OPEN_URL', value: 'https://calendly.com/' },
+        { label: 'WhatsApp Us',           action: 'LEAD_WHATSAPP' },
+        { label: 'Email / Lead Form',     action: 'LEAD_EMAIL' }
       ]);
       break;
 
     case 'EMAIL':
       showBotWithButtons('You can fill the lead form or reach the team directly.', [
-        { label: '📧 Open lead form', action: 'LEAD_EMAIL' },
-        { label: '💬 WhatsApp Us',   action: 'WHATSAPP' },
-        { label: '📅 Book a Call',   action: 'BOOK' }
+        { label: 'Open lead form', action: 'LEAD_EMAIL' },
+        { label: 'WhatsApp Us',   action: 'WHATSAPP' },
+        { label: 'Book a Call',   action: 'BOOK' }
       ]);
       break;
 
     case 'BOOK':
       showBotWithButtons("Here's our booking calendar. Choose a slot and we'll be ready.", [
-        { label: '📅 Open Booking Calendar', action: 'OPEN_URL', value: 'https://calendly.com/' },
-        { label: '💬 WhatsApp Us',           action: 'WHATSAPP' },
-        { label: '📧 Email Us',              action: 'EMAIL' }
+        { label: 'Open Booking Calendar', action: 'OPEN_URL', value: 'https://calendly.com/' },
+        { label: 'WhatsApp Us',           action: 'WHATSAPP' },
+        { label: 'Email Us',              action: 'EMAIL' }
       ]);
       break;
 
@@ -522,9 +522,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         "We've delivered 300+ projects — websites, paid ad campaigns, social content, and conversion-focused design — for brands across Pakistan, UAE, USA, UK, and more.",
         [
-          { label: '🌐 View Portfolio', action: 'OPEN_URL', value: 'https://digitaldivapro.com/portfolio' },
-          { label: '💰 Get a Quote',    action: 'GET_QUOTE' },
-          { label: '📞 Talk to Team',  action: 'TALK_TO_TEAM' }
+          { label: 'View Portfolio', action: 'OPEN_URL', value: 'https://digitaldivapro.com/portfolio' },
+          { label: 'Get a Quote',    action: 'GET_QUOTE' },
+          { label: 'Talk to Team',   action: 'TALK_TO_TEAM' }
         ]
       );
       break;
@@ -533,9 +533,9 @@ function handleAction(action, value) {
       showBotWithButtons(
         "Digital Diva is a results-driven, AI-first digital marketing agency founded by Zil-e-Huma. We operate globally — Pakistan, USA, Canada, UAE, UK, KSA, Australia and beyond.\n\nWe help businesses grow using smart strategies, high-quality content, and AI-powered solutions.",
         [
-          { label: '📂 See Our Work',   action: 'SEE_WORK' },
-          { label: '💰 Get a Quote',    action: 'GET_QUOTE' },
-          { label: '📞 Talk to Team',   action: 'TALK_TO_TEAM' }
+          { label: 'See Our Work',   action: 'SEE_WORK' },
+          { label: 'Get a Quote',    action: 'GET_QUOTE' },
+          { label: 'Talk to Team',   action: 'TALK_TO_TEAM' }
         ]
       );
       break;

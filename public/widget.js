@@ -64,6 +64,25 @@
       background: transparent;
     }
     
+    /* Tablet (481px – 768px) */
+    @media (max-width: 768px) {
+      #diva-chat-widget-container {
+        bottom: 0;
+        right: 0;
+        width: 100vw;
+        height: 92vh;
+        max-height: 92vh;
+        max-width: 100vw;
+        border-radius: 20px 20px 0 0;
+      }
+      #diva-chat-widget-btn {
+        bottom: 80px;
+        right: 16px;
+        width: 54px;
+        height: 54px;
+      }
+    }
+    /* Phone (up to 480px) — full screen */
     @media (max-width: 480px) {
       #diva-chat-widget-container {
         bottom: 0;
@@ -73,6 +92,12 @@
         max-height: 100vh;
         max-width: 100vw;
         border-radius: 0;
+      }
+      #diva-chat-widget-btn {
+        bottom: 80px;
+        right: 16px;
+        width: 52px;
+        height: 52px;
       }
     }
   `;
