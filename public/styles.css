@@ -1158,18 +1158,27 @@ html.widget-mode .chat-input-area {
 
 html.widget-mode .followups-wrap {
   flex: 0 0 auto;
-  padding: 8px 12px 10px;
-  gap: 6px;
+  padding: 10px 12px 10px;
 }
 
-/* Make buttons smaller in widget mode to save vertical space */
+/* Make buttons horizontally scrollable instead of wrapping to save massive vertical space */
 html.widget-mode .followups-row {
-  gap: 6px;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 2px;
+  /* Hide scrollbar for clean UI, but keep it scrollable */
+  scrollbar-width: none; 
+}
+html.widget-mode .followups-row::-webkit-scrollbar {
+  display: none;
 }
 
 html.widget-mode .quick-reply {
-  font-size: 12px;
-  padding: 6px 12px;
+  font-size: 13px;
+  padding: 7px 14px;
+  flex-shrink: 0; /* ensure text isn't squished */
 }
 /* -------- Mobile: prevent iOS auto-zoom on input focus -------- */
 /* iOS Safari zooms in if any input has font-size < 16px. Fix: force 16px on mobile */
