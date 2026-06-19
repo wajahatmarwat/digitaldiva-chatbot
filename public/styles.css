@@ -1103,6 +1103,14 @@ a:hover {
 html.widget-mode body {
   background: transparent !important;
   padding: 0 !important;
+  margin: 0 !important;
+  height: 100%;
+  overflow: hidden;
+}
+
+html.widget-mode html {
+  height: 100%;
+  overflow: hidden;
 }
 
 html.widget-mode .site-header,
@@ -1116,17 +1124,42 @@ html.widget-mode .app-layout {
   display: block;
   padding: 0 !important;
   margin: 0 !important;
+  height: 100%;
+  overflow: hidden;
 }
 
 html.widget-mode .chat-panel {
-  height: 100vh;
+  /* Fill the iframe container, NOT the browser viewport */
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden;
 }
 
 html.widget-mode .chat-card {
   border-radius: 0;
   border: none;
-  height: 100vh;
+  /* Fill the iframe container, NOT the browser viewport */
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden;
   box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Guarantee chat messages fill available space and input stays at bottom */
+html.widget-mode #chat {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+html.widget-mode .chat-input-area {
+  flex: 0 0 auto;
+}
+
+html.widget-mode .followups-wrap {
+  flex: 0 0 auto;
 }
 
 /* -------- Mobile: prevent iOS auto-zoom on input focus -------- */
@@ -1134,17 +1167,5 @@ html.widget-mode .chat-card {
 @media (max-width: 768px) {
   .chat-input-area input {
     font-size: 16px !important;
-  }
-
-  html.widget-mode .chat-card {
-    height: 100%;
-    min-height: 100vh;
-    max-height: 100vh;
-    overflow: hidden;
-  }
-
-  html.widget-mode .chat-panel {
-    height: 100%;
-    overflow: hidden;
   }
 }
