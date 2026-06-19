@@ -1158,8 +1158,19 @@ html.widget-mode .chat-input-area {
 
 html.widget-mode .followups-wrap {
   flex: 0 0 auto;
+  padding: 8px 12px 10px;
+  gap: 6px;
 }
 
+/* Make buttons smaller in widget mode to save vertical space */
+html.widget-mode .followups-row {
+  gap: 6px;
+}
+
+html.widget-mode .quick-reply {
+  font-size: 12px;
+  padding: 6px 12px;
+}
 /* -------- Mobile: prevent iOS auto-zoom on input focus -------- */
 /* iOS Safari zooms in if any input has font-size < 16px. Fix: force 16px on mobile */
 @media (max-width: 768px) {
