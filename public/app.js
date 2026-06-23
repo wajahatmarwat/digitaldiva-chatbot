@@ -55,6 +55,18 @@ function getPackageSetName() {
 }
 
 function showPackageOptions() {
+  const service = quoteState.answers.service;
+  if (['SEO', 'Paid Ads', 'Email'].includes(service)) {
+    showBotWithButtons(
+      `For ${service === 'Email' ? 'Email Marketing' : service}, we build custom proposals based on your specific goals and scale. Would you like to connect with our team to get a quote?`,
+      [
+        { label: 'Continue on WhatsApp', action: 'LEAD_WHATSAPP' },
+        { label: 'Talk to the Team',     action: 'TALK_TO_TEAM' }
+      ]
+    );
+    return;
+  }
+
   const s = quoteState.packageSet || getPackageSet();
   
   if (s === 'A') {

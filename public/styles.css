@@ -15,12 +15,12 @@
   --surface-3: #1c1240;
 
   /* Gold accent — signature brand colour */
-  --gold: #d4a017;
-  --gold-bright: #f0b429;
-  --gold-light: #ffd166;
-  --gold-dim: rgba(240, 180, 41, 0.15);
-  --gold-border: rgba(240, 180, 41, 0.38);
-  --gold-glow: rgba(240, 180, 41, 0.28);
+  --gold: #6366F1;
+  --gold-bright: #06B6D4;
+  --gold-light: #22d3ee;
+  --gold-dim: rgba(99, 102, 241, 0.15);
+  --gold-border: rgba(99, 102, 241, 0.38);
+  --gold-glow: rgba(99, 102, 241, 0.28);
 
   /* Rose accent — Digital Diva personality */
   --rose: #e8449a;
@@ -50,11 +50,11 @@
 
   /* Borders & shadows - 3D depth */
   --border: rgba(255, 255, 255, 0.06);
-  --border-gold: rgba(240, 180, 41, 0.22);
+  --border-gold: rgba(99, 102, 241, 0.22);
   --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 8px 40px rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.75);
-  --glow-gold: 0 0 80px rgba(240, 180, 41, 0.10);
+  --glow-gold: 0 0 80px rgba(99, 102, 241, 0.10);
   --glow-rose: 0 0 80px rgba(232, 68, 154, 0.12);
 
   /* Radii */
@@ -213,14 +213,14 @@ a:hover {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--gold) 0%, #c8853a 100%);
+  background: linear-gradient(135deg, var(--gold) 0%, #06B6D4 100%);
   display: grid;
   place-items: center;
   font-weight: 800;
   font-size: 14px;
   color: #07071a;
   letter-spacing: -0.5px;
-  box-shadow: 0 4px 16px rgba(212, 167, 67, 0.3);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
 }
 
 .logo-name {
@@ -251,7 +251,7 @@ a:hover {
   font-size: 12px;
   font-weight: 500;
   color: var(--gold-light);
-  box-shadow: inset 0 0 10px rgba(240, 180, 41, 0.05);
+  box-shadow: inset 0 0 10px rgba(99, 102, 241, 0.05);
 }
 
 .pulse-dot {
@@ -345,13 +345,13 @@ a:hover {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold) 0%, #c8853a 100%);
+  background: linear-gradient(135deg, var(--gold) 0%, #06B6D4 100%);
   display: grid;
   place-items: center;
   font-weight: 800;
   font-size: 18px;
   color: #07071a;
-  box-shadow: 0 4px 16px rgba(212, 167, 67, 0.35);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
   flex-shrink: 0;
 }
 
@@ -394,7 +394,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, rgba(240, 180, 41, 0.10) 0%, rgba(212, 160, 23, 0.06) 100%);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.10) 0%, rgba(99, 102, 241, 0.06) 100%);
   border: 1.5px solid var(--gold-border);
   border-radius: var(--r-full);
   color: var(--gold-light);
@@ -629,7 +629,7 @@ a:hover {
 
 .chat-input-area input:focus {
   border-color: var(--gold-border);
-  box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.10);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.10);
   background: rgba(5, 3, 14, 0.8);
 }
 
@@ -691,7 +691,7 @@ a:hover {
 /* Stats card */
 .stats-card {
   background: linear-gradient(135deg, #140c30 0%, #0e0825 100%);
-  border: 1px solid rgba(240, 180, 41, 0.22);
+  border: 1px solid rgba(99, 102, 241, 0.22);
   border-radius: var(--r-lg);
   padding: 20px 24px;
   display: flex;
@@ -827,7 +827,7 @@ a:hover {
 .lead-form input:focus,
 .lead-form textarea:focus {
   border-color: var(--gold-border);
-  box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.10);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.10);
   background: rgba(5, 3, 14, 0.8);
 }
 
@@ -860,7 +860,7 @@ a:hover {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 32px var(--gold-glow), 0 0 0 3px rgba(240, 180, 41, 0.2);
+  box-shadow: 0 10px 32px var(--gold-glow), 0 0 0 3px rgba(99, 102, 241, 0.2);
   filter: brightness(1.08);
 }
 
